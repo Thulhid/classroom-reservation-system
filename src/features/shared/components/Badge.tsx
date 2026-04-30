@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 export default function Badge({
   children,
   styles,
@@ -6,7 +8,12 @@ export default function Badge({
   styles: string;
 }) {
   return (
-    <div className={`text-sm px-2 font-semibold rounded-full ${styles}`}>
+    <div
+      className={cn(
+        "rounded-full px-2 text-sm font-semibold whitespace-nowrap",
+        styles,
+      )}
+    >
       {children}
     </div>
   );

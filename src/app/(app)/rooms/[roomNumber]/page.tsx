@@ -34,7 +34,11 @@ export default async function RoomDetailsPage({
     notFound();
   }
 
-  const bookingHistory = await getRoomBookingHistory(room.id);
+  const bookingHistory = await getRoomBookingHistory(
+    room.id,
+    12,
+    isTeacher ? session.user.id : undefined,
+  );
   const bookingPeriod = getDefaultBookingPeriod();
   const now = new Date();
   const activeBooking =
@@ -52,7 +56,9 @@ export default async function RoomDetailsPage({
 
         <RoomPhotoGallery photos={room.photos} />
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
+        <div
+          className={`grid gap-6 ${isTeacher ? "lg:grid-cols-2" : "lg:grid-cols-[1fr_2fr]"}`}
+        >
           {isTeacher ? (
             <RoomBookingBox period={bookingPeriod} room={room} />
           ) : null}
