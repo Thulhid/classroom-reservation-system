@@ -6,8 +6,8 @@ import {
   type BookingStatusFilter,
   type TeacherBookingsQuery,
 } from "@/features/bookings/lib/bookingQuery";
-import { getTeacherBookings as getTeacherBookingsService } from "@/features/bookings/services/teacherBookingsService";
-import type { TeacherBookingsPage } from "@/features/bookings/types";
+import { getTeacherBookings as getTeacherBookingsService } from "@/features/bookings/services/apiBookings";
+import type { TeacherBookingsPage } from "@/features/bookings/types/bookingTypes";
 
 export function useTeacherBookings() {
   const [query, setQuery] = useState<TeacherBookingsQuery>(

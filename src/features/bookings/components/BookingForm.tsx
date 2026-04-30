@@ -1,18 +1,20 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { CalendarPlus, DoorOpen, FileText } from "lucide-react";
-
 import { Button } from "@/features/shared/ui/button";
 import { Input } from "@/features/shared/ui/input";
 import { Textarea } from "@/features/shared/ui/textarea";
-import {
-  showErrorToast,
-  showSuccessToast,
-} from "@/features/shared/lib/toast";
+import { showErrorToast, showSuccessToast } from "@/features/shared/lib/toast";
 import type { Classroom } from "@/features/rooms/services/roomService";
 import type { BookingPeriod } from "@/features/bookings/lib/dateTime";
+import { createBooking } from "@/features/bookings/services/apiBookings";
+import {
+  bookingFormSchema,
+  BookingFormValues,
+} from "../validators/createBookingSchema";
 
 type BookingFormRoom = Pick<Classroom, "id" | "name">;
 
@@ -34,9 +36,9 @@ export default function BookingForm({
   variant = "wide",
 }: BookingFormProps) {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const lockedRoom = rooms.find((room) => room.id === lockedRoomId);
   const isCompact = variant === "compact";
+  const defaultRoomId = lockedRoom?.id ?? rooms[0]?.id ?? "";
   const roomInputId = isCompact ? "compactRoomId" : "roomId";
   const dateInputId = isCompact ? "compactBookingDate" : "bookingDate";
   const startTimeInputId = isCompact
@@ -45,43 +47,36 @@ export default function BookingForm({
   const endTimeInputId = isCompact ? "compactBookingEndTime" : "bookingEndTime";
   const purposeInputId = isCompact ? "compactPurpose" : "purpose";
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<BookingFormValues>({
+    resolver: zodResolver(bookingFormSchema),
+    defaultValues: {
+      roomId: defaultRoomId,
+      date: period.date,
+      startTime: period.startTime,
+      endTime: period.endTime,
+      purpose: "",
+    },
+  });
 
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    const payload = {
-      roomId: String(formData.get("roomId") ?? ""),
-      purpose: String(formData.get("purpose") ?? ""),
-      date: String(formData.get("date") ?? ""),
-      startTime: String(formData.get("startTime") ?? ""),
-      endTime: String(formData.get("endTime") ?? ""),
-    };
+  async function onSubmit(data: BookingFormValues) {
+    const response = await createBooking(data);
 
-    const response = await fetch("/api/bookings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const result = (await response.json()) as { message?: string };
-    setIsSubmitting(false);
-
-    if (!response.ok) {
-      showErrorToast(result.message ?? "Could not create booking.");
+    if (!response.success) {
+      showErrorToast(response.message);
       return;
     }
 
-    showSuccessToast("Booking created successfully.");
+    showSuccessToast(response.message);
     router.refresh();
   }
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className="rounded-lg border border-sky-100 bg-sky-50 p-4 shadow-sm"
     >
       <div className="flex items-center gap-2 text-slate-800">
@@ -100,7 +95,7 @@ export default function BookingForm({
         }
       >
         {lockedRoom ? (
-          <input type="hidden" name="roomId" value={lockedRoom.id} />
+          <input type="hidden" value={lockedRoom.id} {...register("roomId")} />
         ) : (
           <div className="space-y-2">
             <label
@@ -112,14 +107,12 @@ export default function BookingForm({
             <div className="relative">
               <DoorOpen
                 size={16}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
               />
               <select
                 id={roomInputId}
-                name="roomId"
-                defaultValue={rooms[0]?.id}
-                className="h-10 w-full rounded-md border border-zinc-300 bg-white px-4 py-2 pl-10 text-sm text-slate-700 transition-colors duration-300 focus:outline-none focus:ring focus:ring-blue-500"
-                required
+                {...register("roomId")}
+                className="h-10 w-full rounded-md border border-zinc-300 bg-white px-4 py-2 pl-10 text-sm text-slate-700 transition-colors duration-300 focus:ring focus:ring-blue-500 focus:outline-none"
               >
                 {rooms.map((room) => (
                   <option key={room.id} value={room.id}>
@@ -128,6 +121,9 @@ export default function BookingForm({
                 ))}
               </select>
             </div>
+            {errors.roomId ? (
+              <p className="text-sm text-red-600">{errors.roomId.message}</p>
+            ) : null}
           </div>
         )}
 
@@ -138,13 +134,10 @@ export default function BookingForm({
           >
             Date
           </label>
-          <Input
-            id={dateInputId}
-            name="date"
-            type="date"
-            defaultValue={period.date}
-            required
-          />
+          <Input id={dateInputId} type="date" {...register("date")} />
+          {errors.date ? (
+            <p className="text-sm text-red-600">{errors.date.message}</p>
+          ) : null}
         </div>
 
         <div className="space-y-2">
@@ -154,13 +147,10 @@ export default function BookingForm({
           >
             Start
           </label>
-          <Input
-            id={startTimeInputId}
-            name="startTime"
-            type="time"
-            defaultValue={period.startTime}
-            required
-          />
+          <Input id={startTimeInputId} type="time" {...register("startTime")} />
+          {errors.startTime ? (
+            <p className="text-sm text-red-600">{errors.startTime.message}</p>
+          ) : null}
         </div>
 
         <div className="space-y-2">
@@ -170,13 +160,10 @@ export default function BookingForm({
           >
             End
           </label>
-          <Input
-            id={endTimeInputId}
-            name="endTime"
-            type="time"
-            defaultValue={period.endTime}
-            required
-          />
+          <Input id={endTimeInputId} type="time" {...register("endTime")} />
+          {errors.endTime ? (
+            <p className="text-sm text-red-600">{errors.endTime.message}</p>
+          ) : null}
         </div>
 
         <div
@@ -193,25 +180,27 @@ export default function BookingForm({
           <div className="relative">
             <FileText
               size={16}
-              className="pointer-events-none absolute left-3 top-3 text-slate-400"
+              className="pointer-events-none absolute top-3 left-3 text-slate-400"
             />
             <Textarea
               id={purposeInputId}
-              name="purpose"
               placeholder="Lecture, lab, tutorial..."
               maxLength={120}
               className="pl-10"
-              required
+              {...register("purpose")}
             />
           </div>
+          {errors.purpose ? (
+            <p className="text-sm text-red-600">{errors.purpose.message}</p>
+          ) : null}
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-10 flex items-center justify-end gap-4">
         <Button
           buttonType="submit"
           disabled={isSubmitting}
-          className={isCompact ? "w-full gap-2 px-5" : "gap-2 px-5"}
+          className={"mx-auto"}
         >
           <CalendarPlus size={16} />
           {isSubmitting ? "Booking..." : "Book room"}

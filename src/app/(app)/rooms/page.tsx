@@ -6,6 +6,8 @@ import { resolveAvailabilityPeriod } from "@/features/bookings/lib/dateTime";
 import AvailabilitySearchForm from "@/features/rooms/components/AvailabilitySearchForm";
 import RoomCardBox from "@/features/rooms/components/RoomCardBox";
 import Badge from "@/features/shared/components/Badge";
+import { Suspense } from "react";
+import Spinner from "@/features/shared/components/Spinner";
 
 type RoomsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -47,7 +49,9 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
 
         <AvailabilitySearchForm period={period} error={error} />
 
-        <RoomCardBox rooms={rooms} />
+        <Suspense fallback={<Spinner className="mx-auto mt-15" size={50} />}>
+          <RoomCardBox rooms={rooms} />
+        </Suspense>
       </section>
     </main>
   );

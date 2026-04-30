@@ -1,7 +1,7 @@
 import { CalendarDays, Clock, History } from "lucide-react";
 
-import BookingDeleteButton from "@/features/bookings/components/BookingDeleteButton";
-import BookingEditButton from "@/features/bookings/components/BookingEditButton";
+import BookingDeleteButton from "@/features/shared/components/BookingDeleteButton";
+import BookingEditButton from "@/features/shared/components/BookingEditButton";
 import BookingStatusBadge from "@/features/bookings/components/BookingStatusBadge";
 import {
   formatBookingDate,
@@ -9,7 +9,7 @@ import {
   toDateInputValue,
   toTimeInputValue,
 } from "@/features/bookings/lib/dateTime";
-import type { BookingSummary } from "@/features/bookings/types";
+import type { BookingSummary } from "@/features/bookings/types/bookingTypes";
 
 type RoomBookingHistoryProps = {
   bookings: BookingSummary[];
@@ -43,7 +43,7 @@ export default function RoomBookingHistory({
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="break-words font-semibold text-slate-800">
+                  <h3 className="font-semibold break-words text-slate-800">
                     {booking.purpose ?? "Classroom booking"}
                   </h3>
                   <BookingStatusBadge booking={booking} />

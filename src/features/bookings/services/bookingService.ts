@@ -16,7 +16,7 @@ import type {
   BookingsPagination,
   BookingSummary,
   TeacherBookingsPage,
-} from "@/features/bookings/types";
+} from "@/features/bookings/types/bookingTypes";
 import {
   type Classroom,
   getRooms,
@@ -415,7 +415,10 @@ export async function getRoomBookingHistory(
   );
 }
 
-export async function deleteBookingForTeacher(userId: string, bookingId: string) {
+export async function deleteBookingForTeacher(
+  userId: string,
+  bookingId: string,
+) {
   const bookingIdValue = bookingId.trim();
 
   if (!bookingIdValue) {

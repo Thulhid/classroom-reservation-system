@@ -1,9 +1,7 @@
 import { useState } from "react";
 
-import {
-  type UpdateBookingPayload,
-  updateBooking as updateBookingService,
-} from "@/features/bookings/services/bookingMutationService";
+import { updateBooking as updateBookingService } from "@/features/bookings/services/apiBookings";
+import type { UpdateBookingPayload } from "@/features/bookings/types/bookingTypes";
 
 export function useUpdateBooking() {
   const [isUpdating, setIsUpdating] = useState(false);

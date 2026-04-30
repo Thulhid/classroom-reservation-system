@@ -8,7 +8,7 @@ import type {
   BookingSortOrder,
   BookingStatusFilter,
 } from "@/features/bookings/lib/bookingQuery";
-import type { BookingsPagination } from "@/features/bookings/types";
+import type { BookingsPagination } from "@/features/bookings/types/bookingTypes";
 import {
   Pagination,
   PaginationContent,
@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/features/shared/ui/select";
+import Spinner from "@/features/shared/components/Spinner";
 
 type PageToken = number | "ellipsis";
 
@@ -114,26 +115,6 @@ function getPaginationSummary(pagination?: BookingsPagination) {
   return `Showing ${firstItem}-${lastItem} of ${pagination.totalItems}`;
 }
 
-function BookingListSkeleton() {
-  return (
-    <div className="grid gap-4">
-      {Array.from({ length: 3 }, (_, index) => (
-        <div
-          key={index}
-          className="h-28 animate-pulse rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
-        >
-          <div className="h-4 w-28 rounded bg-slate-200" />
-          <div className="mt-4 h-5 w-48 rounded bg-slate-200" />
-          <div className="mt-5 grid gap-2 sm:grid-cols-2">
-            <div className="h-4 rounded bg-slate-100" />
-            <div className="h-4 rounded bg-slate-100" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function TeacherBookingsSection() {
   const {
     bookingsPage,
@@ -168,7 +149,7 @@ export default function TeacherBookingsSection() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:w-[30rem]">
+          <div className="grid gap-3 sm:grid-cols-2 lg:w-120">
             <div className="space-y-2">
               <label
                 htmlFor="booking-status"
@@ -234,7 +215,7 @@ export default function TeacherBookingsSection() {
         aria-live="polite"
       >
         {isLoading && bookings.length === 0 ? (
-          <BookingListSkeleton />
+          <Spinner className="mx-auto mt-15" size={50} />
         ) : (
           <BookingCardBox
             bookings={bookings}

@@ -25,10 +25,6 @@ export default async function BookingsPage() {
             <h1 className="mt-1 text-3xl font-semibold text-slate-800 sm:text-4xl">
               My Bookings
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">
-              Filter your classroom bookings by status, review each page in
-              smaller groups, and keep your schedule easy to scan.
-            </p>
           </div>
 
           <Button link="/rooms" className="w-full gap-2 px-5 sm:w-auto">

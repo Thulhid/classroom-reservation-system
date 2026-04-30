@@ -1,4 +1,4 @@
-import { updateProfilePhoto as updateProfilePhotoService } from "@/features/profile/services/profileService";
+import { updateProfilePhoto as updateProfilePhotoService } from "@/features/profile/services/apiProfile";
 import { useState } from "react";
 
 export function useUpdateProfilePhoto() {

@@ -1,5 +1,5 @@
 import { getBookingDisplayStatus } from "@/features/bookings/lib/bookingStatus";
-import type { BookingSummary } from "@/features/bookings/types";
+import type { BookingSummary } from "@/features/bookings/types/bookingTypes";
 import Badge from "@/features/shared/components/Badge";
 
 type BookingStatusBadgeProps = {

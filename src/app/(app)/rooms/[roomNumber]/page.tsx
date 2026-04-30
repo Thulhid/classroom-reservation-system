@@ -8,8 +8,8 @@ import RoomBookingBox from "@/features/rooms/components/RoomBookingBox";
 import RoomBookingHistory from "@/features/rooms/components/RoomBookingHistory";
 import RoomDetailsHeader from "@/features/rooms/components/RoomDetailsHeader";
 import RoomObjectsBox from "@/features/rooms/components/RoomObjectsBox";
-import RoomPhotoGallery from "@/features/rooms/components/RoomPhotoGallery";
 import { getRoomByNumber } from "@/features/rooms/services/roomService";
+import ImageCarousel from "@/features/rooms/components/ImageCarousel";
 
 type RoomDetailsPageProps = {
   params: Promise<{
@@ -54,7 +54,7 @@ export default async function RoomDetailsPage({
       <section className="mx-auto w-full max-w-7xl space-y-6">
         <RoomDetailsHeader room={room} activeBooking={activeBooking} />
 
-        <RoomPhotoGallery photos={room.photos} />
+        <ImageCarousel photos={room.photos} />
 
         <div
           className={`grid gap-6 ${isTeacher ? "lg:grid-cols-2" : "lg:grid-cols-[1fr_2fr]"}`}

@@ -23,3 +23,14 @@ export type TeacherBookingsPage = {
   bookings: BookingSummary[];
   pagination: BookingsPagination;
 };
+
+export type UpdateBookingPayload = {
+  purpose: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+};
+
+export type CreateBookingPayload = UpdateBookingPayload & {
+  roomId: string;
+};

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { deleteBooking as deleteBookingService } from "@/features/bookings/services/bookingMutationService";
+import { deleteBooking as deleteBookingService } from "@/features/bookings/services/apiBookings";
 
 export function useDeleteBooking() {
   const [isDeleting, setIsDeleting] = useState(false);

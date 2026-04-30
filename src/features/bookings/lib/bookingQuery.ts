@@ -1,12 +1,12 @@
 export const TEACHER_BOOKINGS_PAGE_SIZE = 10;
 
-export const bookingStatusFilters = [
+const bookingStatusFilters = [
   "all",
   "upcoming",
   "ongoing",
   "completed",
 ] as const;
-export const bookingSortOrders = ["asc", "desc"] as const;
+const bookingSortOrders = ["asc", "desc"] as const;
 
 export type BookingStatusFilter = (typeof bookingStatusFilters)[number];
 export type BookingSortOrder = (typeof bookingSortOrders)[number];

@@ -1,7 +1,13 @@
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, DoorOpen, Users, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  DoorOpen,
+  Users,
+  XCircle,
+} from "lucide-react";
 
-import type { BookingSummary } from "@/features/bookings/types";
+import type { BookingSummary } from "@/features/bookings/types/bookingTypes";
 import {
   formatBookingDate,
   formatBookingTimeRange,

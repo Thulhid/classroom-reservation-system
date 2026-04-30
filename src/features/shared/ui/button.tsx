@@ -17,6 +17,7 @@ const buttonVariants = cva(
         outline:
           "border border-slate-200 bg-white px-4 py-2 font-medium text-slate-700 hover:bg-slate-50",
         filter: "p-1 !text-base",
+        danger: "bg-red-500 px-4 py-2 font-medium text-red-50 hover:bg-red-600",
       },
       size: {
         default: "",
@@ -27,7 +28,7 @@ const buttonVariants = cva(
       variant: "primary",
       size: "default",
     },
-  }
+  },
 );
 
 type ButtonProps = Omit<React.ComponentProps<"button">, "type"> &
@@ -58,7 +59,7 @@ function Button({
     variant === "filter" &&
       (isSelected ? "font-medium text-zinc-200" : "text-zinc-400"),
     configStyles,
-    className
+    className,
   );
 
   if (link) {

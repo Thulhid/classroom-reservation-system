@@ -43,14 +43,7 @@ export default function UpdatePasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 w-full max-w-xl space-y-5">
-      <div>
-        <h2 className="text-xl font-semibold text-slate-800">
-          Update Password
-        </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Keep your classroom booking account secure.
-        </p>
-      </div>
+      <h2 className="text-xl font-semibold text-slate-800">Update Password</h2>
 
       <div className="space-y-2">
         <label htmlFor="currentPassword" className="text-sm text-slate-700">
@@ -91,7 +84,9 @@ export default function UpdatePasswordForm() {
         />
       </div>
 
-      {error ? <p className="text-sm font-medium text-red-500">{error}</p> : null}
+      {error ? (
+        <p className="text-sm font-medium text-red-500">{error}</p>
+      ) : null}
       {message ? (
         <p className="text-sm font-medium text-emerald-600">{message}</p>
       ) : null}

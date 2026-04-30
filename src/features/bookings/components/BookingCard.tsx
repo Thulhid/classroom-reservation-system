@@ -6,10 +6,10 @@ import {
   toDateInputValue,
   toTimeInputValue,
 } from "@/features/bookings/lib/dateTime";
-import BookingDeleteButton from "@/features/bookings/components/BookingDeleteButton";
-import BookingEditButton from "@/features/bookings/components/BookingEditButton";
+import BookingDeleteButton from "@/features/shared/components/BookingDeleteButton";
+import BookingEditButton from "@/features/shared/components/BookingEditButton";
 import BookingStatusBadge from "@/features/bookings/components/BookingStatusBadge";
-import type { BookingSummary } from "@/features/bookings/types";
+import type { BookingSummary } from "@/features/bookings/types/bookingTypes";
 
 type BookingCardProps = {
   booking: BookingSummary;
@@ -35,7 +35,7 @@ export default function BookingCard({
             </span>
             <BookingStatusBadge booking={booking} />
           </div>
-          <h2 className="mt-2 break-words text-xl font-semibold text-slate-800">
+          <h2 className="wrap-break-words mt-2 text-xl font-semibold text-slate-800">
             {booking.purpose ?? "Classroom booking"}
           </h2>
         </div>

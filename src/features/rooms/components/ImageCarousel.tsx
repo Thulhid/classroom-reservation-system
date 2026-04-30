@@ -9,7 +9,7 @@ import {
   CarouselPrevious,
 } from "@/features/shared/ui/carousel";
 
-export default function RoomPhotoGallery({
+export default function ImageCarousel({
   photos,
 }: {
   photos: ClassroomPhoto[] | null;
@@ -45,7 +45,7 @@ export default function RoomPhotoGallery({
         </CarouselContent>
 
         {photos.length > 1 ? (
-          <div className="absolute inset-y-0 left-0 right-0 pointer-events-none">
+          <div className="pointer-events-none absolute inset-y-0 right-0 left-0">
             <CarouselPrevious className="pointer-events-auto left-4 border-white/70 bg-white/90 text-slate-800 hover:bg-white" />
             <CarouselNext className="pointer-events-auto right-4 border-white/70 bg-white/90 text-slate-800 hover:bg-white" />
           </div>
