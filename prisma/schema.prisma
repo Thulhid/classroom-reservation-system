@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+}
+
+model User {
+  id       String   @id @default(uuid())
+  email    String   @unique
+  uniID    String   @unique
+  password String
+  role     Role     @default(STUDENT)
+  image    String?
+  student  Student?
+  teacher  Teacher?
+}
+
+model Student {
+  id        String @id @default(uuid())
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String @unique
+  firstName String
+  lastName  String
+}
+
+model Teacher {
+  id        String    @id @default(uuid())
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String    @unique
+  firstName String
+  lastName  String
+  bookings  Booking[]
+}
+
+model Room {
+  id       String @id
+  number   String @unique
+  name     String
+  floor    String
+  capacity Int
+
+  coverImage String
+  images     String[] @default([])
+
+  presentationSystem Boolean @default(false)
+  projector          Boolean @default(false)
+  internetAccess     Boolean @default(true)
+  airConditioned     Boolean @default(false)
+
+  tables       Int @default(0)
+  lecturerDesk Int @default(1)
+  whiteBoards  Int @default(1)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, number])
+}
+
+model Booking {
+  id        String   @id @default(uuid())
+  roomId    String
+  purpose   String?
+  startsAt  DateTime
+  endsAt    DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+
+  @@index([roomId, startsAt, endsAt])
+  @@index([teacherId, startsAt, endsAt])
+}

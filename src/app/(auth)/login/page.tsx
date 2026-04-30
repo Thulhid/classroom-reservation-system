@@ -1,10 +1,15 @@
 "use client";
 
-import Button from "@/features/shared/components/Button";
+import { Button } from "@/features/shared/ui/button";
 import Link from "next/link";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useShowPassword } from "@/features/shared/hooks/useShowPassword";
+import { Input } from "@/features/shared/ui/input";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { showErrorToast } from "@/features/shared/lib/toast";
 
 type LoginFormValues = {
   universityId: string;
@@ -12,7 +17,9 @@ type LoginFormValues = {
 };
 
 export default function Page() {
-  const [isEyeOpen, setIsEyeOpen] = useState(false);
+  const router = useRouter();
+  const { IsEyeOpen, setIsEyeOpen } = useShowPassword();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit } = useForm<LoginFormValues>({
     defaultValues: {
       universityId: "",
@@ -20,8 +27,24 @@ export default function Page() {
     },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    console.log(data);
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsSubmitting(true);
+
+    const result = await signIn("credentials", {
+      universityId: data.universityId,
+      password: data.password,
+      redirect: false,
+    });
+
+    setIsSubmitting(false);
+
+    if (result?.error) {
+      showErrorToast("Invalid university ID or password.");
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
   };
 
   return (
@@ -63,11 +86,11 @@ export default function Page() {
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
-              <input
+              <Input
                 id="universityId"
                 type="text"
                 placeholder="Enter University ID"
-                className="input placeholder:text-slate-500 pl-10"
+                className="pl-10"
                 {...register("universityId")}
               />
             </div>
@@ -79,14 +102,14 @@ export default function Page() {
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
-              <input
+              <Input
                 id="password"
-                type={isEyeOpen ? "text" : "password"}
+                type={IsEyeOpen ? "text" : "password"}
                 placeholder="Enter Password"
-                className="input placeholder:text-slate-500 pl-10 pr-10"
+                className="pl-10 pr-10"
                 {...register("password")}
               />
-              {isEyeOpen ? (
+              {IsEyeOpen ? (
                 <Eye
                   size={18}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 cursor-pointer"
@@ -105,8 +128,12 @@ export default function Page() {
             </span>
           </div>
           <div className="mt-6 m-auto">
-            <Button variant="primary" buttonType="submit">
-              Login
+            <Button
+              variant="primary"
+              buttonType="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Logging in..." : "Login"}
             </Button>
           </div>
           <p className="text-center text-sm text-slate-500">

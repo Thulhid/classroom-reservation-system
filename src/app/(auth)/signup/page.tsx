@@ -1,9 +1,20 @@
 "use client";
 
-import Button from "@/features/shared/components/Button";
+import { Button } from "@/features/shared/ui/button";
 import Link from "next/link";
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Eye, EyeOff, Lock, Mail, User, UserRoundCog } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
+import { useShowPassword } from "@/features/shared/hooks/useShowPassword";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/features/shared/ui/select";
+import { Input } from "@/features/shared/ui/input";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type SignUpFormValues = {
@@ -17,8 +28,11 @@ type SignUpFormValues = {
 };
 
 export default function SignUpPage() {
-  const [isEyeOpen, setIsEyeOpen] = useState(false);
-  const { register, handleSubmit } = useForm<SignUpFormValues>({
+  const router = useRouter();
+  const { IsEyeOpen, setIsEyeOpen } = useShowPassword();
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { control, register, handleSubmit } = useForm<SignUpFormValues>({
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -30,8 +44,40 @@ export default function SignUpPage() {
     },
   });
 
-  const onSubmit = (data: SignUpFormValues) => {
-    console.log(data);
+  const onSubmit = async (data: SignUpFormValues) => {
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    const response = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const result = (await response.json()) as { message?: string };
+      setIsSubmitting(false);
+      setErrorMessage(result.message ?? "Could not create your account.");
+      return;
+    }
+
+    const signInResult = await signIn("credentials", {
+      universityId: data.universityId,
+      password: data.password,
+      redirect: false,
+    });
+
+    setIsSubmitting(false);
+
+    if (signInResult?.error) {
+      router.push("/login");
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
   };
 
   return (
@@ -75,11 +121,11 @@ export default function SignUpPage() {
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
-              <input
+              <Input
                 id="firstName"
                 type="text"
                 placeholder="Enter first name"
-                className="input pl-10 placeholder:text-slate-500"
+                className="pl-10"
                 {...register("firstName")}
               />
             </div>
@@ -92,11 +138,11 @@ export default function SignUpPage() {
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
-              <input
+              <Input
                 id="lastName"
                 type="text"
                 placeholder="Enter last name"
-                className="input pl-10 placeholder:text-slate-500"
+                className="pl-10"
                 {...register("lastName")}
               />
             </div>
@@ -109,11 +155,11 @@ export default function SignUpPage() {
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
-              <input
+              <Input
                 id="universityId"
                 type="text"
                 placeholder="Enter university ID"
-                className="input pl-10 placeholder:text-slate-500"
+                className="pl-10"
                 {...register("universityId")}
               />
             </div>
@@ -126,11 +172,11 @@ export default function SignUpPage() {
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
-              <input
+              <Input
                 id="universityEmail"
                 type="email"
                 placeholder="Enter university email"
-                className="input pl-10 placeholder:text-slate-500"
+                className="pl-10"
                 {...register("universityEmail")}
               />
             </div>
@@ -143,14 +189,14 @@ export default function SignUpPage() {
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
-              <input
+              <Input
                 id="password"
-                type={isEyeOpen ? "text" : "password"}
+                type={IsEyeOpen ? "text" : "password"}
                 placeholder="Create password"
-                className="input pl-10 placeholder:text-slate-500"
+                className="pl-10 pr-10"
                 {...register("password")}
               />
-              {isEyeOpen ? (
+              {IsEyeOpen ? (
                 <Eye
                   size={18}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 cursor-pointer"
@@ -173,45 +219,51 @@ export default function SignUpPage() {
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
-              <input
+              <Input
                 id="confirmPassword"
                 type="password"
                 placeholder="Confirm password"
-                className="input pl-10 placeholder:text-slate-500"
+                className="pl-10"
                 {...register("confirmPassword")}
               />
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 md:col-span-2">
-            <span className="text-sm font-medium text-slate-700">Role</span>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 transition-colors hover:border-sky-300">
-                <input
-                  type="radio"
-                  value="student"
-                  className="h-4 w-4 accent-sky-500"
-                  {...register("role")}
-                />
-                <span className="font-medium text-slate-700">Student</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 transition-colors hover:border-sky-300">
-                <input
-                  type="radio"
-                  value="teacher"
-                  className="h-4 w-4 accent-sky-500"
-                  {...register("role")}
-                />
-                <span className="font-medium text-slate-700">Teacher</span>
-              </label>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="role">Role</label>
+            <div className="relative">
+              <UserRoundCog
+                size={18}
+                className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400"
+              />
+              <Controller
+                control={control}
+                name="role"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="role" className="pl-10">
+                      <SelectValue placeholder="Select account role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="student">Student</SelectItem>
+                      <SelectItem value="teacher">Teacher</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
         </div>
 
         <div className="mt-8 flex flex-col items-center gap-4">
-          <Button variant="primary" buttonType="submit">
-            Sign Up
+          <Button variant="primary" buttonType="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating account..." : "Sign Up"}
           </Button>
+          {errorMessage ? (
+            <p className="text-center text-sm font-medium text-red-500">
+              {errorMessage}
+            </p>
+          ) : null}
           <p className="text-center text-sm text-slate-500">
             Already have an account?{" "}
             <Link
