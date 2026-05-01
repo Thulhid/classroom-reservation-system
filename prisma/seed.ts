@@ -259,10 +259,50 @@ async function main() {
     },
   });
 
+  const admin = await prisma.user.upsert({
+    where: {
+      uniID: "ADM001",
+    },
+    update: {
+      email: "admin@classroom.test",
+      password,
+      role: Role.ADMIN,
+      admin: {
+        upsert: {
+          create: {
+            firstName: "System",
+            lastName: "Admin",
+          },
+          update: {
+            firstName: "System",
+            lastName: "Admin",
+          },
+        },
+      },
+    },
+    create: {
+      email: "admin@classroom.test",
+      uniID: "ADM001",
+      password,
+      role: Role.ADMIN,
+      admin: {
+        create: {
+          firstName: "System",
+          lastName: "Admin",
+        },
+      },
+    },
+    select: {
+      uniID: true,
+      role: true,
+    },
+  });
+
   console.log(`Seeded ${rooms.length} rooms and test users:`);
   console.table([
     { ...student, password: TEST_PASSWORD },
     { ...teacher, password: TEST_PASSWORD },
+    { ...admin, password: TEST_PASSWORD },
   ]);
 }
 

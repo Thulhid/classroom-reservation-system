@@ -8,14 +8,19 @@ import { CldImage } from "next-cloudinary";
 
 type NavbarProps = {
   user: Session["user"];
+  isAdmin: boolean;
 };
 
-export default function Navbar({ user }: NavbarProps) {
+export default function Navbar({ user, isAdmin }: NavbarProps) {
   const pathname = usePathname();
   const fullName = `${user.firstName} ${user.lastName}`.trim();
+  const roomsHref = isAdmin ? "/admin/rooms" : "/rooms";
+  const usersHref = "/admin/users";
 
   function linkClass(path: string) {
-    return path === pathname
+    const isActive = pathname === path || pathname.startsWith(`${path}/`);
+
+    return isActive
       ? "text-sky-500"
       : "text-slate-600 hover:text-sky-500";
   }
@@ -37,9 +42,17 @@ export default function Navbar({ user }: NavbarProps) {
           >
             Dashboard
           </Link>
-          <Link href="/rooms" className={`text-sm ${linkClass("/rooms")}`}>
+          <Link href={roomsHref} className={`text-sm ${linkClass(roomsHref)}`}>
             Rooms
           </Link>
+          {isAdmin ? (
+            <Link
+              href={usersHref}
+              className={`text-sm ${linkClass(usersHref)}`}
+            >
+              Users
+            </Link>
+          ) : null}
           {user.role === "TEACHER" && (
             <Link
               href="/bookings"

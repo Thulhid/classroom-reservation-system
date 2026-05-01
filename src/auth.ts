@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
+import { Role } from "@/generated/prisma/client";
 
 type SessionUpdateData = {
   image?: unknown;
@@ -16,6 +17,31 @@ function getUpdatedImage(session: unknown) {
   const image = (session as SessionUpdateData).image;
 
   return typeof image === "string" ? image.trim() : undefined;
+}
+
+function getUserProfile(user: {
+  role: Role;
+  admin: {
+    firstName: string;
+    lastName: string;
+  } | null;
+  student: {
+    firstName: string;
+    lastName: string;
+  } | null;
+  teacher: {
+    firstName: string;
+    lastName: string;
+  } | null;
+}) {
+  switch (user.role) {
+    case Role.ADMIN:
+      return user.admin;
+    case Role.TEACHER:
+      return user.teacher;
+    default:
+      return user.student;
+  }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -48,6 +74,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             uniID: universityId,
           },
           include: {
+            admin: true,
             student: true,
             teacher: true,
           },
@@ -63,7 +90,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const profile = user.role === "TEACHER" ? user.teacher : user.student;
+        const profile = getUserProfile(user);
         const firstName = profile?.firstName ?? "";
         const lastName = profile?.lastName ?? "";
 
@@ -108,7 +135,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         typeof token.uniID === "string" &&
         typeof token.firstName === "string" &&
         typeof token.lastName === "string" &&
-        (token.role === "STUDENT" || token.role === "TEACHER")
+        (token.role === "ADMIN" ||
+          token.role === "STUDENT" ||
+          token.role === "TEACHER")
       ) {
         session.user.id = token.id;
         session.user.uniID = token.uniID;

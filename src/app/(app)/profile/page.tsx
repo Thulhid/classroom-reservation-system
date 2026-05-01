@@ -26,7 +26,12 @@ export default async function ProfilePage() {
   });
   const initials = `${user.firstName.at(0) ?? ""}${user.lastName.at(0) ?? ""}`;
   const fullName = `${user.firstName} ${user.lastName}`;
-  const roleLabel = user.role === "TEACHER" ? "Teacher" : "Student";
+  const roleLabel =
+    user.role === "ADMIN"
+      ? "Admin"
+      : user.role === "TEACHER"
+        ? "Teacher"
+        : "Student";
 
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">

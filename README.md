@@ -20,6 +20,25 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Admin Room Management
+
+The admin room panel lives at `/admin/rooms`.
+
+Room creation and editing now use dedicated pages:
+
+- `/admin/rooms/new`
+- `/admin/rooms/[roomId]/edit`
+
+Admin access now uses the persisted `ADMIN` role.
+
+The seeded admin login is:
+
+- University ID: `ADM001`
+- Password: `password123`
+
+For direct room image uploads, configure `NEXT_PUBLIC_CLOUDINARY_ROOM_UPLOAD_PRESET`.
+If it is not set, the room editor falls back to `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

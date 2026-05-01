@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { isAdminUser } from "@/features/shared/lib/adminAccess";
 import Navbar from "@/features/shared/components/NavBar";
 import Providers from "@/features/shared/components/Provider";
 import { prisma } from "@/lib/prisma";
@@ -29,7 +30,7 @@ export default async function AppLayout({
   };
   return (
     <>
-      <Navbar user={user} />
+      <Navbar user={user} isAdmin={isAdminUser(user)} />
       <Providers>{children}</Providers>
     </>
   );

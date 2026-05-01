@@ -1,5 +1,3 @@
-import { CalendarDays } from "lucide-react";
-
 import BookingCard from "@/features/bookings/components/BookingCard";
 import type { BookingSummary } from "@/features/bookings/types/bookingTypes";
 import Empty from "@/features/shared/components/Empty";

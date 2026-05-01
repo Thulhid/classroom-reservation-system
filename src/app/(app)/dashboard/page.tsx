@@ -20,7 +20,13 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const roleLabel = session.user.role === "TEACHER" ? "Teacher" : "Student";
+  const roleLabel =
+    session.user.role === "ADMIN"
+      ? "Admin"
+      : session.user.role === "TEACHER"
+        ? "Teacher"
+        : "Student";
+  const roomsHref = session.user.role === "ADMIN" ? "/admin/rooms" : "/rooms";
   const period = getDefaultBookingPeriod();
   const rooms = await getClassroomAvailability(period);
   const availableRooms = rooms.filter((room) => !room.booking).length;
@@ -41,10 +47,19 @@ export default async function DashboardPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button link="/rooms" className="gap-2 px-5">
+            <Button link={roomsHref} className="gap-2 px-5">
               Rooms
               <ArrowRight size={16} />
             </Button>
+            {session.user.role === "ADMIN" ? (
+              <Button
+                link="/admin/users"
+                variant="outline"
+                className="border-slate-300 px-5 py-2 text-slate-700 hover:bg-slate-100"
+              >
+                Users
+              </Button>
+            ) : null}
             {session.user.role === "TEACHER" ? (
               <Button
                 link="/bookings"
