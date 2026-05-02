@@ -1,13 +1,13 @@
-import { getAdminApiGuard } from "@/features/shared/lib/adminAccess";
+import { getAdminApiGuard } from "@/features/admin/lib/adminAccess";
 import {
   getAdminUserValidationMessage,
   parseAdminUserPayload,
-} from "@/features/users/validators/adminUserFormSchema";
+} from "@/features/admin/users/validators/adminUserFormSchema";
 import {
   AdminUserServiceError,
   deleteAdminUser,
   updateAdminUser,
-} from "@/features/users/services/adminUserService";
+} from "@/features/admin/users/services/adminUserService";
 
 export const runtime = "nodejs";
 

@@ -20,22 +20,20 @@ export default function Navbar({ user, isAdmin }: NavbarProps) {
   function linkClass(path: string) {
     const isActive = pathname === path || pathname.startsWith(`${path}/`);
 
-    return isActive
-      ? "text-sky-500"
-      : "text-slate-600 hover:text-sky-500";
+    return isActive ? "text-sky-500" : "text-slate-600 hover:text-sky-500";
   }
 
   return (
     <header className="border-b bg-white">
-      <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <GraduationCap className="text-sky-500" />
-          <span className="text-lg font-semibold text-slate-800">
+      <nav className="mx-auto flex w-full max-w-[1440px] flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
+        <Link href="/" className="flex min-w-0 items-center gap-2">
+          <GraduationCap className="shrink-0 text-sky-500" />
+          <span className="max-w-44 truncate text-base font-semibold text-slate-800 sm:max-w-none sm:text-lg">
             SmartClassroom
           </span>
         </Link>
 
-        <div className="order-last flex w-full items-center gap-4 overflow-x-auto text-nowrap md:order-none md:w-auto md:gap-6">
+        <div className="order-last -mx-1 flex w-full items-center gap-3 overflow-x-auto px-1 pb-1 text-nowrap md:order-none md:mx-0 md:w-auto md:gap-6 md:overflow-visible md:px-0 md:pb-0">
           <Link
             href="/dashboard"
             className={`text-sm ${linkClass("/dashboard")}`}
@@ -65,7 +63,7 @@ export default function Navbar({ user, isAdmin }: NavbarProps) {
 
         <Link
           href="/profile"
-          className="flex min-w-0 cursor-pointer items-center gap-3"
+          className="flex min-w-0 cursor-pointer items-center gap-2 sm:gap-3"
         >
           {user.image ? (
             <CldImage
@@ -79,12 +77,12 @@ export default function Navbar({ user, isAdmin }: NavbarProps) {
               }}
               format="webp"
               quality="auto"
-              className="size-[30px] rounded-full object-cover"
+              className="size-[30px] shrink-0 rounded-full object-cover"
             />
           ) : (
-            <CircleUserRound size={30} strokeWidth={1} />
+            <CircleUserRound size={30} strokeWidth={1} className="shrink-0" />
           )}
-          <span className="max-w-36 truncate text-sm font-medium text-slate-600 sm:max-w-none">
+          <span className="hidden max-w-40 truncate text-sm font-medium text-slate-600 sm:block lg:max-w-none">
             {user.firstName} {user.lastName}
           </span>
         </Link>

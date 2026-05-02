@@ -91,7 +91,11 @@ export default function UpdatePasswordForm() {
         <p className="text-sm font-medium text-emerald-600">{message}</p>
       ) : null}
 
-      <Button buttonType="submit" disabled={isSubmitting}>
+      <Button
+        buttonType="submit"
+        disabled={isSubmitting}
+        className="w-full sm:w-auto"
+      >
         {isSubmitting ? "Updating..." : "Update Password"}
       </Button>
     </form>

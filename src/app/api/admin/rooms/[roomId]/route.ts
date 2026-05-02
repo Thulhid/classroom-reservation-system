@@ -1,13 +1,13 @@
-import { getAdminApiGuard } from "@/features/rooms/lib/adminRoomAccess";
+import { getAdminApiGuard } from "@/features/admin/rooms/lib/adminRoomAccess";
 import {
   getAdminRoomValidationMessage,
   parseAdminRoomPayload,
-} from "@/features/rooms/validators/adminRoomFormSchema";
+} from "@/features/admin/rooms/validators/adminRoomFormSchema";
 import {
   AdminRoomServiceError,
   deleteAdminRoom,
   updateAdminRoom,
-} from "@/features/rooms/services/adminRoomService";
+} from "@/features/admin/rooms/services/adminRoomService";
 
 export const runtime = "nodejs";
 

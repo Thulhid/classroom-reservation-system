@@ -41,7 +41,7 @@ export default function RoomDetailsHeader({
             <DoorOpen size={16} />
             {room.floor}
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-800 sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-semibold text-slate-800 sm:text-4xl">
             {room.name}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">

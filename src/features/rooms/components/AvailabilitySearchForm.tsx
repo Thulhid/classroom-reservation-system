@@ -15,7 +15,7 @@ export default function AvailabilitySearchForm({
 }: AvailabilitySearchFormProps) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="text-lg font-semibold text-slate-700 mb-5">
+      <h2 className="mb-4 text-lg font-semibold text-slate-700 sm:mb-5">
         Search Availability
       </h2>
       <form

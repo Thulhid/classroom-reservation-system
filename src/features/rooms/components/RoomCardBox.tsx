@@ -7,7 +7,7 @@ type RoomCardBoxProps = {
 
 export default async function RoomCardBox({ rooms }: RoomCardBoxProps) {
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 mt-12">
+    <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-2 xl:grid-cols-3">
       {rooms.map((room) => (
         <RoomCard key={room.id} room={room} />
       ))}

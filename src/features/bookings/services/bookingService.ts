@@ -1,10 +1,13 @@
-import { isFuture } from "date-fns";
+import { addMinutes, format, isFuture } from "date-fns";
 
 import { prisma } from "@/lib/prisma";
 import {
   type BookingPeriod,
   type BookingPeriodInput,
   parseBookingPeriod,
+  parseLocalDateTime,
+  toDateInputValue,
+  toTimeInputValue,
 } from "@/features/bookings/lib/dateTime";
 import {
   defaultTeacherBookingsQuery,
@@ -15,6 +18,8 @@ import {
 import type {
   BookingsPagination,
   BookingSummary,
+  RoomAvailabilityMatrixData,
+  RoomAvailabilityMatrixSlot,
   TeacherBookingsPage,
 } from "@/features/bookings/types/bookingTypes";
 import {
@@ -37,6 +42,14 @@ type UpdateBookingInput = BookingPeriodInput & {
   purpose?: string;
 };
 
+type RoomAvailabilityMatrixInput = {
+  blockCount?: number;
+  date: string;
+  slotMinutes?: number;
+  startTime?: string;
+  viewerUserId?: string;
+};
+
 class BookingError extends Error {
   constructor(
     message: string,
@@ -45,6 +58,12 @@ class BookingError extends Error {
     super(message);
   }
 }
+
+export const ROOM_AVAILABILITY_MATRIX_DEFAULT_BLOCKS = 10;
+export const ROOM_AVAILABILITY_MATRIX_DEFAULT_START_TIME = "08:00";
+export const ROOM_AVAILABILITY_MATRIX_MAX_BLOCKS = 10;
+export const ROOM_AVAILABILITY_MATRIX_MIN_BLOCKS = 5;
+const defaultMatrixSlotMinutes = 60;
 
 function getTeacherDisplayName(teacher: {
   firstName: string;
@@ -124,6 +143,66 @@ function getOverlapWhere(period: Pick<BookingPeriod, "startsAt" | "endsAt">) {
       gt: period.startsAt,
     },
   };
+}
+
+function getSlotLabel(startsAt: Date, slotMinutes: number) {
+  return format(startsAt, slotMinutes < 60 ? "h:mm a" : "h a");
+}
+
+function clampMatrixBlockCount(blockCount?: number) {
+  if (!Number.isFinite(blockCount)) {
+    return ROOM_AVAILABILITY_MATRIX_DEFAULT_BLOCKS;
+  }
+
+  return Math.min(
+    ROOM_AVAILABILITY_MATRIX_MAX_BLOCKS,
+    Math.max(
+      ROOM_AVAILABILITY_MATRIX_MIN_BLOCKS,
+      Math.trunc(blockCount ?? ROOM_AVAILABILITY_MATRIX_DEFAULT_BLOCKS),
+    ),
+  );
+}
+
+function getMatrixSlots({
+  blockCount,
+  date,
+  slotMinutes = defaultMatrixSlotMinutes,
+  startTime = ROOM_AVAILABILITY_MATRIX_DEFAULT_START_TIME,
+}: Omit<RoomAvailabilityMatrixInput, "viewerUserId">) {
+  const startsAt = parseLocalDateTime(date, startTime);
+  const minutes = Math.max(15, slotMinutes);
+  const blocks = clampMatrixBlockCount(blockCount);
+
+  if (!startsAt) {
+    return [];
+  }
+
+  const slots: RoomAvailabilityMatrixSlot[] = [];
+  let slotStartsAt = startsAt;
+
+  while (slots.length < blocks) {
+    const slotEndsAt = addMinutes(slotStartsAt, minutes);
+
+    slots.push({
+      date: toDateInputValue(slotStartsAt),
+      endsAt: slotEndsAt,
+      endTime: toTimeInputValue(slotEndsAt),
+      label: getSlotLabel(slotStartsAt, minutes),
+      startsAt: slotStartsAt,
+      startTime: toTimeInputValue(slotStartsAt),
+    });
+
+    slotStartsAt = slotEndsAt;
+  }
+
+  return slots;
+}
+
+function isOverlappingSlot(
+  booking: Pick<BookingSummary, "endsAt" | "startsAt">,
+  slot: Pick<RoomAvailabilityMatrixSlot, "endsAt" | "startsAt">,
+) {
+  return booking.startsAt < slot.endsAt && booking.endsAt > slot.startsAt;
 }
 
 function getStatusWhere(status: BookingStatusFilter, now = new Date()) {
@@ -306,6 +385,115 @@ export async function getUpcomingTeacherBookings(
   return bookings.map((booking) =>
     toBookingSummary(booking, roomNameById, { canDelete: true }),
   );
+}
+
+export async function getRoomAvailabilityMatrix({
+  blockCount,
+  date,
+  slotMinutes,
+  startTime,
+  viewerUserId,
+}: RoomAvailabilityMatrixInput): Promise<RoomAvailabilityMatrixData> {
+  const slots = getMatrixSlots({ blockCount, date, slotMinutes, startTime });
+  const rooms = await getRooms();
+
+  if (slots.length === 0 || rooms.length === 0) {
+    return {
+      date,
+      rows: rooms.map((room) => ({
+        cells: [],
+        room: {
+          capacity: room.capacity,
+          floor: room.floor,
+          id: room.id,
+          name: room.name,
+          number: room.number,
+        },
+      })),
+      slots,
+    };
+  }
+
+  const matrixStartsAt = slots[0].startsAt;
+  const matrixEndsAt = slots.at(-1)?.endsAt ?? slots[0].endsAt;
+  const roomIds = rooms.map((room) => room.id);
+  const roomNameById = new Map(rooms.map((room) => [room.id, room.name]));
+  const bookings = await prisma.booking.findMany({
+    where: {
+      roomId: {
+        in: roomIds,
+      },
+      startsAt: {
+        lt: matrixEndsAt,
+      },
+      endsAt: {
+        gt: matrixStartsAt,
+      },
+    },
+    include: {
+      teacher: {
+        select: {
+          firstName: true,
+          lastName: true,
+          userId: true,
+        },
+      },
+    },
+    orderBy: {
+      startsAt: "asc",
+    },
+  });
+
+  const bookingsByRoom = new Map<string, BookingSummary[]>();
+
+  for (const booking of bookings.map((booking) =>
+    toBookingSummary(booking, roomNameById, { viewerUserId }),
+  )) {
+    const roomBookings = bookingsByRoom.get(booking.roomId) ?? [];
+    roomBookings.push(booking);
+    bookingsByRoom.set(booking.roomId, roomBookings);
+  }
+
+  return {
+    date,
+    slots,
+    rows: rooms.map((room) => {
+      const roomBookings = bookingsByRoom.get(room.id) ?? [];
+
+      return {
+        room: {
+          capacity: room.capacity,
+          floor: room.floor,
+          id: room.id,
+          name: room.name,
+          number: room.number,
+        },
+        cells: slots.map((slot) => {
+          const matchingBookings = roomBookings.filter((booking) =>
+            isOverlappingSlot(booking, slot),
+          );
+          const booking =
+            matchingBookings.find((booking) => booking.canDelete) ??
+            matchingBookings[0];
+
+          if (!booking) {
+            return {
+              ...slot,
+              status: "free",
+            };
+          }
+
+          return {
+            ...slot,
+            bookingId: booking.id,
+            purpose: booking.purpose,
+            status: booking.canDelete ? "mine" : "booked",
+            teacherName: booking.teacherName,
+          };
+        }),
+      };
+    }),
+  };
 }
 
 export async function getTeacherBookingsPage(

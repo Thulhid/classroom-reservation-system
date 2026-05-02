@@ -15,12 +15,12 @@ export default function TeachersNextWindow({
   period: BookingPeriod;
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold text-slate-800">
           Next availability window
         </h2>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm leading-6 text-slate-500">
           {formatBookingDate(period.startsAt)} at{" "}
           {formatBookingTimeRange(period.startsAt, period.endsAt)}
         </p>
@@ -35,7 +35,7 @@ export default function TeachersNextWindow({
               {upcomingBookings.map((booking) => (
                 <TeachersNextWindowCard
                   key={booking.id}
-                  id={booking.id}
+                  purpose={booking.purpose}
                   roomName={booking.roomName}
                   startsAt={booking.startsAt}
                   endsAt={booking.endsAt}

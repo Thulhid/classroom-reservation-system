@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { isAdminUser } from "@/features/shared/lib/adminAccess";
+import { isAdminUser } from "@/features/admin/lib/adminAccess";
 import Navbar from "@/features/shared/components/NavBar";
 import Providers from "@/features/shared/components/Provider";
 import { prisma } from "@/lib/prisma";
@@ -31,7 +31,13 @@ export default async function AppLayout({
   return (
     <>
       <Navbar user={user} isAdmin={isAdminUser(user)} />
-      <Providers>{children}</Providers>
+      <Providers>
+        <main className="min-h-[calc(100vh-4rem)] bg-slate-50 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+          <div className="mx-auto w-full max-w-[1440px] space-y-6">
+            {children}
+          </div>
+        </main>
+      </Providers>
     </>
   );
 }

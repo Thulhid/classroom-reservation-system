@@ -34,3 +34,38 @@ export type UpdateBookingPayload = {
 export type CreateBookingPayload = UpdateBookingPayload & {
   roomId: string;
 };
+
+export type RoomAvailabilityMatrixCellStatus = "free" | "booked" | "mine";
+
+export type RoomAvailabilityMatrixSlot = {
+  date: string;
+  endsAt: Date;
+  endTime: string;
+  label: string;
+  startsAt: Date;
+  startTime: string;
+};
+
+export type RoomAvailabilityMatrixCell = RoomAvailabilityMatrixSlot & {
+  bookingId?: string;
+  purpose?: string | null;
+  status: RoomAvailabilityMatrixCellStatus;
+  teacherName?: string;
+};
+
+export type RoomAvailabilityMatrixRow = {
+  cells: RoomAvailabilityMatrixCell[];
+  room: {
+    capacity: number;
+    floor: string;
+    id: string;
+    name: string;
+    number: string;
+  };
+};
+
+export type RoomAvailabilityMatrixData = {
+  date: string;
+  rows: RoomAvailabilityMatrixRow[];
+  slots: RoomAvailabilityMatrixSlot[];
+};

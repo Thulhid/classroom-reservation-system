@@ -25,7 +25,7 @@ export default function BookingCard({
   const hasActions = booking.canEdit || booking.canDelete;
 
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -35,7 +35,7 @@ export default function BookingCard({
             </span>
             <BookingStatusBadge booking={booking} />
           </div>
-          <h2 className="wrap-break-words mt-2 text-xl font-semibold text-slate-800">
+          <h2 className="mt-2 text-lg font-semibold break-words text-slate-800 sm:text-xl">
             {booking.purpose ?? "Classroom booking"}
           </h2>
         </div>

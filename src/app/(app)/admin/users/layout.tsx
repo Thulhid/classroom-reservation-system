@@ -1,5 +1,5 @@
-import { requireAdminUser } from "@/features/shared/lib/adminAccess";
-import AdminUsersLayoutShell from "@/features/users/components/admin/AdminUsersLayoutShell";
+import { requireAdminUser } from "@/features/admin/lib/adminAccess";
+import AdminUsersLayoutShell from "@/features/admin/users/components/AdminUsersLayoutShell";
 
 type AdminUsersLayoutProps = {
   children: React.ReactNode;

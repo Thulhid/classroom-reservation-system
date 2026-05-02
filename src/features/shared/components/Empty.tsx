@@ -1,6 +1,6 @@
 function Empty({ resourceName }: { resourceName: string }) {
   return (
-    <p className="mt-5 bg-white p-6 text-center text-xs text-slate-800 shadow sm:text-base">
+    <p className="mt-5 rounded-lg bg-white p-5 text-center text-sm text-slate-800 shadow sm:p-6 sm:text-base">
       No {resourceName} could be found!
     </p>
   );

@@ -22,7 +22,7 @@ export default function RoomCard({ room }: RoomCardProps) {
   return (
     <article className="flex h-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex w-full flex-col">
-        <div className="relative h-44 bg-slate-200">
+        <div className="relative h-40 bg-slate-200 sm:h-44">
           {coverPhoto ? (
             <CloudinaryImage
               src={coverPhoto.src}
@@ -41,20 +41,20 @@ export default function RoomCard({ room }: RoomCardProps) {
           <div className="absolute inset-0 bg-linear-to-t from-slate-950/35 to-transparent" />
         </div>
 
-        <div className="flex flex-1 flex-col p-5">
-          <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-1 flex-col p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div>
               <div className="flex items-center gap-2 text-slate-500">
                 <DoorOpen size={16} />
                 <span className="text-sm">{room.floor}</span>
               </div>
-              <h2 className="mt-2 text-xl font-semibold text-slate-800">
+              <h2 className="mt-2 text-lg font-semibold text-slate-800 sm:text-xl">
                 {room.name}
               </h2>
             </div>
 
             <Badge
-              styles={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
+              styles={`inline-flex w-fit items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
                 isBooked
                   ? "bg-red-50 text-red-700"
                   : "bg-emerald-50 text-emerald-700"
@@ -73,7 +73,7 @@ export default function RoomCard({ room }: RoomCardProps) {
           <div className="mt-5 flex flex-1 flex-col justify-end">
             <Link
               href={`/rooms/${room.number}`}
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
             >
               View details
               <ArrowRight size={16} />

@@ -24,10 +24,10 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 The admin room panel lives at `/admin/rooms`.
 
-Room creation and editing now use dedicated pages:
+Room creation and updating now use dedicated pages:
 
-- `/admin/rooms/new`
-- `/admin/rooms/[roomId]/edit`
+- `/admin/rooms/create`
+- `/admin/rooms/[roomId]/update`
 
 Admin access now uses the persisted `ADMIN` role.
 
@@ -37,7 +37,7 @@ The seeded admin login is:
 - Password: `password123`
 
 For direct room image uploads, configure `NEXT_PUBLIC_CLOUDINARY_ROOM_UPLOAD_PRESET`.
-If it is not set, the room editor falls back to `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`.
+If it is not set, the room form falls back to `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`.
 
 ## Learn More
 

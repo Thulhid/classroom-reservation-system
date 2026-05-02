@@ -24,7 +24,7 @@ export default function ImageCarousel({
         <CarouselContent className="ml-0">
           {photos.map((photo, index) => (
             <CarouselItem key={`${photo.src}-${index}`} className="pl-0">
-              <div className="relative h-72 bg-slate-200 sm:h-96 lg:h-[30rem]">
+              <div className="relative h-56 bg-slate-200 sm:h-80 lg:h-[30rem]">
                 <CloudinaryImage
                   src={photo.src}
                   alt={photo.alt}
@@ -46,12 +46,12 @@ export default function ImageCarousel({
 
         {photos.length > 1 ? (
           <div className="pointer-events-none absolute inset-y-0 right-0 left-0">
-            <CarouselPrevious className="pointer-events-auto left-4 border-white/70 bg-white/90 text-slate-800 hover:bg-white" />
-            <CarouselNext className="pointer-events-auto right-4 border-white/70 bg-white/90 text-slate-800 hover:bg-white" />
+            <CarouselPrevious className="pointer-events-auto left-2 border-white/70 bg-white/90 text-slate-800 hover:bg-white sm:left-4" />
+            <CarouselNext className="pointer-events-auto right-2 border-white/70 bg-white/90 text-slate-800 hover:bg-white sm:right-4" />
           </div>
         ) : null}
 
-        <CarouselDots className="absolute bottom-5 left-1/2 z-10 -translate-x-1/2" />
+        <CarouselDots className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 sm:bottom-5" />
       </Carousel>
     </section>
   );

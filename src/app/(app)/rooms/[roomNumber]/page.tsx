@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { isWithinInterval } from "date-fns";
 
 import { auth } from "@/auth";
-import { getDefaultBookingPeriod } from "@/features/bookings/lib/dateTime";
+import { resolveAvailabilityPeriod } from "@/features/bookings/lib/dateTime";
 import { getRoomBookingHistory } from "@/features/bookings/services/bookingService";
 import RoomBookingBox from "@/features/rooms/components/RoomBookingBox";
 import RoomBookingHistory from "@/features/rooms/components/RoomBookingHistory";
@@ -15,10 +15,12 @@ type RoomDetailsPageProps = {
   params: Promise<{
     roomNumber: string;
   }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function RoomDetailsPage({
   params,
+  searchParams,
 }: RoomDetailsPageProps) {
   const session = await auth();
 
@@ -27,6 +29,7 @@ export default async function RoomDetailsPage({
   }
 
   const { roomNumber } = await params;
+  const resolvedSearchParams = await searchParams;
   const room = await getRoomByNumber(roomNumber);
   const isTeacher = session.user.role === "TEACHER";
 
@@ -39,7 +42,8 @@ export default async function RoomDetailsPage({
     12,
     isTeacher ? session.user.id : undefined,
   );
-  const bookingPeriod = getDefaultBookingPeriod();
+  const { period: bookingPeriod } =
+    resolveAvailabilityPeriod(resolvedSearchParams);
   const now = new Date();
   const activeBooking =
     bookingHistory.find((booking) =>
@@ -50,24 +54,22 @@ export default async function RoomDetailsPage({
     ) ?? null;
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
-      <section className="mx-auto w-full max-w-7xl space-y-6">
-        <RoomDetailsHeader room={room} activeBooking={activeBooking} />
+    <>
+      <RoomDetailsHeader room={room} activeBooking={activeBooking} />
 
-        <ImageCarousel photos={room.photos} />
+      <ImageCarousel photos={room.photos} />
 
-        <div
-          className={`grid gap-6 ${isTeacher ? "lg:grid-cols-2" : "lg:grid-cols-[1fr_2fr]"}`}
-        >
-          {isTeacher ? (
-            <RoomBookingBox period={bookingPeriod} room={room} />
-          ) : null}
-          <RoomObjectsBox amenities={room.amenities} objects={room.objects} />
-          {!isTeacher ? <RoomBookingHistory bookings={bookingHistory} /> : null}
-        </div>
+      <div
+        className={`grid gap-5 sm:gap-6 ${isTeacher ? "lg:grid-cols-2" : "lg:grid-cols-[1fr_2fr]"}`}
+      >
+        {isTeacher ? (
+          <RoomBookingBox period={bookingPeriod} room={room} />
+        ) : null}
+        <RoomObjectsBox amenities={room.amenities} objects={room.objects} />
+        {!isTeacher ? <RoomBookingHistory bookings={bookingHistory} /> : null}
+      </div>
 
-        {isTeacher ? <RoomBookingHistory bookings={bookingHistory} /> : null}
-      </section>
-    </main>
+      {isTeacher ? <RoomBookingHistory bookings={bookingHistory} /> : null}
+    </>
   );
 }

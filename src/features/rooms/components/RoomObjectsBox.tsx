@@ -30,7 +30,7 @@ export default function RoomObjectsBox({
   objects,
 }: RoomObjectsBoxProps) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <h2 className="text-lg font-semibold text-slate-800">Inside the room</h2>
 
       <div className="mt-4">
@@ -46,7 +46,7 @@ export default function RoomObjectsBox({
         </h3>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
         {objects.map((object) => (
           <div
             key={object.name}

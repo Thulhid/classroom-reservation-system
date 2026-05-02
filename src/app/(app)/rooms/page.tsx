@@ -27,32 +27,28 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
   const bookedRooms = rooms.length - availableRooms;
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
-      <section className="mx-auto w-full max-w-7xl space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:justify-between">
-          <h1 className="mt-1 text-3xl font-semibold text-slate-800 sm:text-4xl">
-            Rooms
-          </h1>
+    <>
+      <div className="flex flex-col gap-4 lg:flex-row lg:justify-between">
+        <h1 className="mt-1 text-2xl font-semibold text-slate-800 sm:text-4xl">
+          Rooms
+        </h1>
 
-          <div className="flex gap-3 items-center ">
-            <Badge styles={"bg-emerald-500 text-emerald-50"}>
-              Free {availableRooms}
-            </Badge>
-            <Badge styles={"bg-red-500 text-red-50"}>
-              Booked {bookedRooms}
-            </Badge>
-            <Badge styles={"bg-slate-500 text-slate-50"}>
-              Total {rooms.length}
-            </Badge>
-          </div>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Badge styles={"bg-emerald-500 text-emerald-50"}>
+            Free {availableRooms}
+          </Badge>
+          <Badge styles={"bg-red-500 text-red-50"}>Booked {bookedRooms}</Badge>
+          <Badge styles={"bg-slate-500 text-slate-50"}>
+            Total {rooms.length}
+          </Badge>
         </div>
+      </div>
 
-        <AvailabilitySearchForm period={period} error={error} />
+      <AvailabilitySearchForm period={period} error={error} />
 
-        <Suspense fallback={<Spinner className="mx-auto mt-15" size={50} />}>
-          <RoomCardBox rooms={rooms} />
-        </Suspense>
-      </section>
-    </main>
+      <Suspense fallback={<Spinner className="mx-auto mt-15" size={50} />}>
+        <RoomCardBox rooms={rooms} />
+      </Suspense>
+    </>
   );
 }

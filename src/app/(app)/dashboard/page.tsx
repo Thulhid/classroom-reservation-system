@@ -6,20 +6,70 @@ import { Button } from "@/features/shared/ui/button";
 import {
   getClassroomAvailability,
   getUpcomingTeacherBookings,
+  ROOM_AVAILABILITY_MATRIX_DEFAULT_BLOCKS,
+  ROOM_AVAILABILITY_MATRIX_DEFAULT_START_TIME,
+  ROOM_AVAILABILITY_MATRIX_MAX_BLOCKS,
+  ROOM_AVAILABILITY_MATRIX_MIN_BLOCKS,
 } from "@/features/bookings/services/bookingService";
-import { getDefaultBookingPeriod } from "@/features/bookings/lib/dateTime";
+import {
+  getDefaultBookingPeriod,
+  parseLocalDateTime,
+} from "@/features/bookings/lib/dateTime";
 import { Suspense } from "react";
 import Spinner from "@/features/shared/components/Spinner";
 import Stats from "@/features/dashboard/components/Stats";
 import TeachersNextWindowBox from "@/features/dashboard/components/TeachersNextWindowBox";
+import RoomAvailabilityMatrix from "@/features/dashboard/components/RoomAvailabilityMatrix";
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function getFirstSearchValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getMatrixBlockCount(value: string | string[] | undefined) {
+  const blockCount = Number(getFirstSearchValue(value));
+
+  if (!Number.isInteger(blockCount)) {
+    return ROOM_AVAILABILITY_MATRIX_DEFAULT_BLOCKS;
+  }
+
+  return Math.min(
+    ROOM_AVAILABILITY_MATRIX_MAX_BLOCKS,
+    Math.max(ROOM_AVAILABILITY_MATRIX_MIN_BLOCKS, blockCount),
+  );
+}
+
+function getMatrixStartTime(value: string | string[] | undefined) {
+  const startTime = getFirstSearchValue(value)?.trim();
+
+  return startTime && /^([01]\d|2[0-3]):[0-5]\d$/.test(startTime)
+    ? startTime
+    : ROOM_AVAILABILITY_MATRIX_DEFAULT_START_TIME;
+}
+
+function getMatrixDate(
+  value: string | string[] | undefined,
+  fallbackDate: string,
+  startTime: string,
+) {
+  const date = getFirstSearchValue(value)?.trim() || fallbackDate;
+
+  return parseLocalDateTime(date, startTime) ? date : fallbackDate;
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: DashboardPageProps) {
   const session = await auth();
 
   if (!session?.user) {
     redirect("/login");
   }
 
+  const resolvedSearchParams = await searchParams;
   const roleLabel =
     session.user.role === "ADMIN"
       ? "Admin"
@@ -28,6 +78,17 @@ export default async function DashboardPage() {
         : "Student";
   const roomsHref = session.user.role === "ADMIN" ? "/admin/rooms" : "/rooms";
   const period = getDefaultBookingPeriod();
+  const matrixStartTime = getMatrixStartTime(
+    resolvedSearchParams.matrixStartTime,
+  );
+  const matrixDate = getMatrixDate(
+    resolvedSearchParams.matrixDate,
+    period.date,
+    matrixStartTime,
+  );
+  const matrixBlockCount = getMatrixBlockCount(
+    resolvedSearchParams.matrixBlocks,
+  );
   const rooms = await getClassroomAvailability(period);
   const availableRooms = rooms.filter((room) => !room.booking).length;
   const upcomingBookings =
@@ -36,53 +97,63 @@ export default async function DashboardPage() {
       : [];
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
-      <section className="mx-auto w-full max-w-7xl space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm font-medium text-sky-600">{roleLabel}</p>
-            <h1 className="mt-1 text-3xl font-semibold text-slate-800 sm:text-4xl">
-              Welcome, {session.user.firstName}
-            </h1>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button link={roomsHref} className="gap-2 px-5">
-              Rooms
-              <ArrowRight size={16} />
-            </Button>
-            {session.user.role === "ADMIN" ? (
-              <Button
-                link="/admin/users"
-                variant="outline"
-                className="border-slate-300 px-5 py-2 text-slate-700 hover:bg-slate-100"
-              >
-                Users
-              </Button>
-            ) : null}
-            {session.user.role === "TEACHER" ? (
-              <Button
-                link="/bookings"
-                variant="secondary"
-                className="border-slate-300 px-5 py-2 text-slate-700 hover:bg-slate-100"
-              >
-                My Bookings
-              </Button>
-            ) : null}
-          </div>
+    <>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm font-medium text-sky-600">{roleLabel}</p>
+          <h1 className="mt-1 text-2xl font-semibold text-slate-800 sm:text-4xl">
+            Welcome, {session.user.firstName}
+          </h1>
         </div>
 
-        <Suspense fallback={<Spinner className="mx-auto mt-15" size={50} />}>
-          <Stats roomsLength={rooms.length} availableRooms={availableRooms} />
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button link={roomsHref} className="w-full gap-2 px-5 sm:w-auto">
+            Rooms
+            <ArrowRight size={16} />
+          </Button>
+          {session.user.role === "ADMIN" ? (
+            <Button
+              link="/admin/users"
+              variant="outline"
+              className="w-full border-slate-300 px-5 py-2 text-slate-700 hover:bg-slate-100 sm:w-auto"
+            >
+              Users
+            </Button>
+          ) : null}
+          {session.user.role === "TEACHER" ? (
+            <Button
+              link="/bookings"
+              variant="secondary"
+              className="w-full border-slate-300 px-5 py-2 text-slate-700 hover:bg-slate-100 sm:w-auto"
+            >
+              My Bookings
+            </Button>
+          ) : null}
+        </div>
+      </div>
 
-          {session.user.role === "TEACHER" && (
-            <TeachersNextWindowBox
-              upcomingBookings={upcomingBookings}
-              period={period}
-            />
-          )}
-        </Suspense>
-      </section>
-    </main>
+      <Suspense fallback={<Spinner className="mx-auto mt-15" size={50} />}>
+        <Stats roomsLength={rooms.length} availableRooms={availableRooms} />
+
+        {session.user.role === "TEACHER" ? (
+          <TeachersNextWindowBox
+            upcomingBookings={upcomingBookings}
+            period={period}
+          />
+        ) : null}
+
+        {session.user.role !== "ADMIN" ? (
+          <RoomAvailabilityMatrix
+            blockCount={matrixBlockCount}
+            date={matrixDate}
+            showMine={session.user.role === "TEACHER"}
+            startTime={matrixStartTime}
+            viewerUserId={
+              session.user.role === "TEACHER" ? session.user.id : undefined
+            }
+          />
+        ) : null}
+      </Suspense>
+    </>
   );
 }

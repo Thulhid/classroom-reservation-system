@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,26 +50,28 @@ export default function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="mx-auto my-auto w-full max-w-md rounded-3xl bg-white px-6 py-10 shadow-2xl sm:px-10"
+      className="mx-auto my-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-white px-5 py-8 shadow-xl sm:rounded-3xl sm:px-10 sm:py-10 sm:shadow-2xl"
     >
       <div className="flex justify-center">
         <Lock strokeWidth={2} size={40} className="text-sky-500" />
       </div>
       <div className="flex justify-center">
         <div className="mt-5 flex flex-col text-center">
-          <h1 className="text-4xl font-semibold text-slate-700">
+          <h1 className="text-3xl font-semibold text-slate-700 sm:text-4xl">
             Welcome back
           </h1>
-          <p className="text-slate-500">Login to your account to continue</p>
+          <p className="mt-1 text-sm text-slate-500 sm:text-base">
+            Login to your account to continue
+          </p>
         </div>
       </div>
-      <div className="mt-10 flex flex-col gap-4">
+      <div className="mt-8 flex flex-col gap-4 sm:mt-10">
         <div className="flex flex-col gap-2">
           <label htmlFor="universityId">University ID</label>
           <div className="relative">
             <User
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
             />
             <Input
               id="universityId"
@@ -92,25 +93,25 @@ export default function LoginForm() {
           <div className="relative">
             <Lock
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
             />
             <Input
               id="password"
               type={IsEyeOpen ? "text" : "password"}
               placeholder="Enter Password"
-              className="pl-10 pr-10"
+              className="pr-10 pl-10"
               {...register("password")}
             />
             {IsEyeOpen ? (
               <Eye
                 size={18}
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-600"
+                className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-600"
                 onClick={() => setIsEyeOpen(false)}
               />
             ) : (
               <EyeOff
                 size={18}
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-600"
+                className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-600"
                 onClick={() => setIsEyeOpen(true)}
               />
             )}
@@ -118,26 +119,21 @@ export default function LoginForm() {
           {errors.password ? (
             <p className="text-sm text-red-600">{errors.password.message}</p>
           ) : null}
-          <span className="mt-1 place-self-end cursor-pointer text-sm text-slate-700 hover:underline">
+          <span className="mt-1 cursor-pointer place-self-end text-sm text-slate-700 hover:underline">
             Forgot Password?
           </span>
         </div>
 
-        <div className="m-auto mt-6">
-          <Button variant="primary" buttonType="submit" disabled={isSubmitting}>
+        <div className="mt-4 flex sm:mt-6 sm:justify-center">
+          <Button
+            variant="primary"
+            buttonType="submit"
+            disabled={isSubmitting}
+            className="w-full sm:w-auto"
+          >
             {isSubmitting ? "Logging in..." : "Login"}
           </Button>
         </div>
-
-        <p className="text-center text-sm text-slate-500">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/signup"
-            className="font-medium text-sky-600 transition-colors hover:text-sky-700"
-          >
-            Create one
-          </Link>
-        </p>
       </div>
     </form>
   );
