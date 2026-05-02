@@ -5,6 +5,7 @@ import type { Room } from "@/generated/prisma/client";
 
 import AdminRoomRowActions from "@/features/admin/rooms/components/AdminRoomRowActions";
 import CloudinaryImage from "@/features/shared/components/CloudinaryImage";
+import { getRoomImageDeliveryProps } from "@/features/rooms/lib/roomImages";
 import {
   Table,
   TableBody,
@@ -27,9 +28,7 @@ function getRoomFeatureSummary(room: Room) {
   ].filter(Boolean) as string[];
 }
 
-export default function AdminRoomsTable({
-  rooms,
-}: AdminRoomsTableProps) {
+export default function AdminRoomsTable({ rooms }: AdminRoomsTableProps) {
   if (rooms.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
@@ -65,20 +64,13 @@ export default function AdminRoomsTable({
             <TableRow key={room.id}>
               <TableCell>
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="relative size-14 shrink-0 overflow-hidden rounded-2xl bg-slate-100">
+                  <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
                     {room.coverImage ? (
                       <CloudinaryImage
                         src={room.coverImage}
                         alt={`${room.name} cover photo`}
-                        fill
-                        crop={{
-                          type: "fill",
-                          gravity: "center",
-                        }}
-                        format="webp"
-                        quality="auto"
-                        sizes="56px"
-                        className="object-cover"
+                        {...getRoomImageDeliveryProps("tableThumb")}
+                        className="size-full object-cover"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-slate-400">
@@ -91,7 +83,7 @@ export default function AdminRoomsTable({
                     <p className="truncate font-semibold text-slate-800">
                       {room.name}
                     </p>
-                    <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
+                    <p className="mt-1 text-xs tracking-wide text-slate-500 uppercase">
                       Room {room.number}
                     </p>
                   </div>

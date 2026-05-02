@@ -10,6 +10,7 @@ import {
 import type { ClassroomAvailability } from "@/features/bookings/services/bookingService";
 import CloudinaryImage from "@/features/shared/components/CloudinaryImage";
 import Badge from "@/features/shared/components/Badge";
+import { getRoomImageDeliveryProps } from "@/features/rooms/lib/roomImages";
 
 type RoomCardProps = {
   room: ClassroomAvailability;
@@ -27,15 +28,8 @@ export default function RoomCard({ room }: RoomCardProps) {
             <CloudinaryImage
               src={coverPhoto.src}
               alt={coverPhoto.alt}
-              fill
-              crop={{
-                type: "fill",
-                gravity: "center",
-              }}
-              format="webp"
-              quality="auto"
-              sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-              className="object-cover"
+              {...getRoomImageDeliveryProps("card")}
+              className="size-full object-cover"
             />
           ) : null}
           <div className="absolute inset-0 bg-linear-to-t from-slate-950/35 to-transparent" />

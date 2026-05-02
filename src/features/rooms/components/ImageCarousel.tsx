@@ -1,5 +1,6 @@
 import CloudinaryImage from "@/features/shared/components/CloudinaryImage";
 import type { ClassroomPhoto } from "@/features/rooms/services/roomService";
+import { getRoomImageDeliveryProps } from "@/features/rooms/lib/roomImages";
 import {
   Carousel,
   CarouselContent,
@@ -28,16 +29,9 @@ export default function ImageCarousel({
                 <CloudinaryImage
                   src={photo.src}
                   alt={photo.alt}
-                  fill
                   priority={index === 0}
-                  crop={{
-                    type: "fill",
-                    gravity: "center",
-                  }}
-                  format="webp"
-                  quality="auto"
-                  sizes="(min-width: 1024px) 1200px, 100vw"
-                  className="object-cover"
+                  {...getRoomImageDeliveryProps("carousel")}
+                  className="size-full object-cover"
                 />
               </div>
             </CarouselItem>

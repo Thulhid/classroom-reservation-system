@@ -9,10 +9,13 @@ import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 
 import CloudinaryImage from "@/features/shared/components/CloudinaryImage";
 import { Button } from "@/features/shared/ui/button";
-
-type CloudinaryUploadInfo = {
-  public_id?: string;
-};
+import {
+  getRoomImageDeliveryProps,
+  getUniqueRoomImages,
+  getUploadedRoomImagePublicId,
+  roomImageUploadOptions,
+  roomImageUploadPreset,
+} from "@/features/rooms/lib/roomImages";
 
 type AdminRoomImageFieldProps = {
   buttonLabel: string;
@@ -26,27 +29,6 @@ type AdminRoomImageFieldProps = {
   maxItems?: number;
   onChange: (images: string[]) => void;
 };
-
-const roomUploadPreset =
-  process.env.NEXT_PUBLIC_CLOUDINARY_ROOM_UPLOAD_PRESET ??
-  process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-const ROOM_IMAGE_ASPECT_RATIO = 16 / 9;
-const ROOM_IMAGE_FOLDER = "classroom-reservation-system/rooms";
-
-function getUniqueImages(images: string[]) {
-  const seen = new Set<string>();
-
-  return images.filter((image) => {
-    const key = image.toLowerCase();
-
-    if (seen.has(key)) {
-      return false;
-    }
-
-    seen.add(key);
-    return true;
-  });
-}
 
 export default function AdminRoomImageField({
   buttonLabel,
@@ -62,17 +44,16 @@ export default function AdminRoomImageField({
 }: AdminRoomImageFieldProps) {
   const [uploadError, setUploadError] = useState("");
   const [isReplacing, setIsReplacing] = useState(false);
-  const isUploadConfigured = Boolean(roomUploadPreset);
+  const isUploadConfigured = Boolean(roomImageUploadPreset);
   const remainingSlots = Math.max(0, maxItems - images.length);
   const canUpload = remainingSlots > 0 || maxItems === 1;
-  const previewImages = useMemo(() => getUniqueImages(images), [images]);
+  const previewImages = useMemo(() => getUniqueRoomImages(images), [images]);
 
   function handleUploadSuccess(results: CloudinaryUploadWidgetResults) {
     setUploadError("");
     setIsReplacing(false);
 
-    const info = results.info as CloudinaryUploadInfo | undefined;
-    const publicId = info?.public_id?.trim();
+    const publicId = getUploadedRoomImagePublicId(results);
 
     if (!publicId) {
       setUploadError("Could not read uploaded image.");
@@ -82,7 +63,7 @@ export default function AdminRoomImageField({
     const nextImages =
       maxItems === 1
         ? [publicId]
-        : getUniqueImages([...previewImages, publicId]).slice(0, maxItems);
+        : getUniqueRoomImages([...previewImages, publicId]).slice(0, maxItems);
 
     onChange(nextImages);
   }
@@ -110,15 +91,8 @@ export default function AdminRoomImageField({
                   <CloudinaryImage
                     src={image}
                     alt={`${label} preview ${index + 1}`}
-                    fill
-                    crop={{
-                      type: "fill",
-                      gravity: "center",
-                    }}
-                    format="webp"
-                    quality="auto"
-                    sizes="(min-width: 1280px) 22vw, (min-width: 640px) 40vw, 100vw"
-                    className="object-cover"
+                    {...getRoomImageDeliveryProps("adminPreview")}
+                    className="size-full object-cover"
                   />
                 </div>
 
@@ -158,7 +132,7 @@ export default function AdminRoomImageField({
 
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <CldUploadWidget
-            uploadPreset={roomUploadPreset}
+            uploadPreset={roomImageUploadPreset}
             onSuccess={handleUploadSuccess}
             onError={(uploadError) => {
               setIsReplacing(false);
@@ -172,19 +146,7 @@ export default function AdminRoomImageField({
                 uploadError?.statusText ?? "Could not upload room image.",
               );
             }}
-            options={{
-              sources: ["local", "camera"],
-              multiple: false,
-              maxFiles: 1,
-              resourceType: "image",
-              clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
-              cropping: true,
-              croppingAspectRatio: ROOM_IMAGE_ASPECT_RATIO,
-              croppingDefaultSelectionRatio: ROOM_IMAGE_ASPECT_RATIO,
-              croppingShowDimensions: true,
-              showSkipCropButton: false,
-              folder: ROOM_IMAGE_FOLDER,
-            }}
+            options={roomImageUploadOptions}
           >
             {({ open, isLoading }) => (
               <Button

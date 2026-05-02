@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,7 +8,7 @@ import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { useShowPassword } from "@/features/shared/hooks/useShowPassword";
-import { showErrorToast } from "@/features/shared/lib/toast";
+import { showErrorToast, showSuccessToast } from "@/features/shared/lib/toast";
 import { Button } from "@/features/shared/ui/button";
 import { Input } from "@/features/shared/ui/input";
 
@@ -41,6 +42,13 @@ export default function LoginForm() {
     if (result?.error) {
       showErrorToast("Invalid university ID or password.");
       return;
+    }
+
+    if (window.sessionStorage.getItem("showPasswordProfileNotice")) {
+      window.sessionStorage.removeItem("showPasswordProfileNotice");
+      showSuccessToast(
+        "Login successful. You can change your password anytime in the profile section.",
+      );
     }
 
     router.push("/dashboard");
@@ -119,9 +127,12 @@ export default function LoginForm() {
           {errors.password ? (
             <p className="text-sm text-red-600">{errors.password.message}</p>
           ) : null}
-          <span className="mt-1 cursor-pointer place-self-end text-sm text-slate-700 hover:underline">
+          <Link
+            href="/forgot-password"
+            className="mt-1 place-self-end text-sm text-slate-700 hover:underline"
+          >
             Forgot Password?
-          </span>
+          </Link>
         </div>
 
         <div className="mt-4 flex sm:mt-6 sm:justify-center">
