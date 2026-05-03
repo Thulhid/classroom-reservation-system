@@ -257,7 +257,7 @@ export default function AdminCreateUserDialog({
                 />
                 <Input
                   id={`${fieldIdPrefix}ConfirmPassword`}
-                  type={isConfirmPasswordVisible ? "text" : "password"}
+                  type={"password"}
                   autoComplete="new-password"
                   placeholder="Repeat the password"
                   className="pr-10 pl-10"
@@ -265,19 +265,6 @@ export default function AdminCreateUserDialog({
                   disabled={isSubmitting}
                   required
                 />
-                {isConfirmPasswordVisible ? (
-                  <Eye
-                    size={18}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-600"
-                    onClick={() => setIsConfirmPasswordVisible(false)}
-                  />
-                ) : (
-                  <EyeOff
-                    size={18}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-600"
-                    onClick={() => setIsConfirmPasswordVisible(true)}
-                  />
-                )}
               </div>
               {errors.confirmPassword ? (
                 <p className="text-sm text-red-600">
