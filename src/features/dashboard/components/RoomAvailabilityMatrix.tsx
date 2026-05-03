@@ -133,6 +133,94 @@ function MatrixCell({
   );
 }
 
+function MobileSlotCell({
+  cell,
+  room,
+  showMine,
+}: {
+  cell: RoomAvailabilityMatrixCell;
+  room: RoomAvailabilityMatrixRow["room"];
+  showMine: boolean;
+}) {
+  const status = getDisplayStatus(cell, showMine);
+  const className = cn(
+    "flex min-h-14 flex-col justify-center rounded-md border px-3 py-2 text-left transition-colors",
+    cellStyles[status],
+  );
+  const label = getCellLabel(status);
+  const title = getCellTitle(room, cell, status);
+  const content = (
+    <>
+      <span className="text-xs font-medium opacity-80">{cell.label}</span>
+      <span className="mt-1 text-sm font-semibold">{label}</span>
+    </>
+  );
+
+  if (status === "free") {
+    return (
+      <Link
+        href={getFreeRoomHref(room, cell)}
+        className={className}
+        title={title}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  if (status === "mine") {
+    return (
+      <Link href="/bookings" className={className} title={title}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={className} title={title}>
+      {content}
+    </div>
+  );
+}
+
+function MobileRoomAvailabilityCard({
+  row,
+  showMine,
+}: {
+  row: RoomAvailabilityMatrixRow;
+  showMine: boolean;
+}) {
+  return (
+    <article className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 font-semibold text-slate-800">
+          <DoorOpen size={16} className="shrink-0 text-sky-600" />
+          <span className="truncate">{row.room.name}</span>
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-slate-500">
+          <span>{row.room.number}</span>
+          <span>{row.room.floor}</span>
+          <span className="inline-flex items-center gap-1">
+            <Users size={13} />
+            {row.room.capacity}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {row.cells.map((cell) => (
+          <MobileSlotCell
+            key={`${row.room.id}-${cell.startTime}`}
+            cell={cell}
+            room={row.room}
+            showMine={showMine}
+          />
+        ))}
+      </div>
+    </article>
+  );
+}
+
 export default async function RoomAvailabilityMatrix({
   blockCount,
   date,
@@ -252,7 +340,17 @@ export default async function RoomAvailabilityMatrix({
         ) : null}
       </div>
 
-      <div className="no-scrollbar mt-5 overflow-x-auto">
+      <div className="mt-5 space-y-3 md:hidden">
+        {matrix.rows.map((row) => (
+          <MobileRoomAvailabilityCard
+            key={row.room.id}
+            row={row}
+            showMine={showMine}
+          />
+        ))}
+      </div>
+
+      <div className="no-scrollbar mt-5 hidden overflow-x-auto md:block">
         <table
           className="table-fixed border-separate border-spacing-0 text-sm"
           style={{

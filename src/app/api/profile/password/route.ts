@@ -1,13 +1,11 @@
 import bcrypt from "bcryptjs";
 
 import { auth } from "@/auth";
+import {
+  getUpdatePasswordValidationMessage,
+  parseUpdatePasswordPayload,
+} from "@/features/profile/validators/updatePasswordSchema";
 import { prisma } from "@/lib/prisma";
-
-type UpdatePasswordRequestBody = {
-  currentPassword?: string;
-  newPassword?: string;
-  confirmNewPassword?: string;
-};
 
 export const runtime = "nodejs";
 
@@ -18,31 +16,17 @@ export async function PATCH(request: Request) {
     return Response.json({ message: "Unauthorized." }, { status: 401 });
   }
 
-  const body = (await request.json()) as UpdatePasswordRequestBody;
-  const currentPassword = body.currentPassword ?? "";
-  const newPassword = body.newPassword ?? "";
-  const confirmNewPassword = body.confirmNewPassword ?? "";
+  const body = await request.json().catch(() => null);
+  const parsed = parseUpdatePasswordPayload(body);
 
-  if (!currentPassword || !newPassword || !confirmNewPassword) {
+  if (!parsed.success) {
     return Response.json(
-      { message: "Please complete all password fields." },
-      { status: 400 }
+      { message: getUpdatePasswordValidationMessage(parsed.error) },
+      { status: 400 },
     );
   }
 
-  if (newPassword.length < 8) {
-    return Response.json(
-      { message: "New password must be at least 8 characters." },
-      { status: 400 }
-    );
-  }
-
-  if (newPassword !== confirmNewPassword) {
-    return Response.json(
-      { message: "New password and confirmation do not match." },
-      { status: 400 }
-    );
-  }
+  const { currentPassword, newPassword } = parsed.data;
 
   const user = await prisma.user.findUnique({
     where: {
@@ -56,13 +40,13 @@ export async function PATCH(request: Request) {
 
   const currentPasswordMatches = await bcrypt.compare(
     currentPassword,
-    user.password
+    user.password,
   );
 
   if (!currentPasswordMatches) {
     return Response.json(
       { message: "Current password is incorrect." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 

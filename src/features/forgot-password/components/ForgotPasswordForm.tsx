@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -11,7 +12,8 @@ import {
   Mail,
   Send,
 } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 import { useShowPassword } from "@/features/shared/hooks/useShowPassword";
 import { showErrorToast, showSuccessToast } from "@/features/shared/lib/toast";
@@ -19,44 +21,71 @@ import { Button } from "@/features/shared/ui/button";
 import { Input } from "@/features/shared/ui/input";
 import { useSendResetPIN } from "../hooks/useSendResetPIN";
 import { useResetPassword } from "../hooks/useResetPassword";
+import {
+  forgotPasswordRequestSchema,
+  forgotPasswordResetSchema,
+  type ForgotPasswordRequestPayload,
+  type ForgotPasswordResetPayload,
+} from "../validators/forgotPasswordSchema";
 
 export default function ForgotPasswordForm() {
   const router = useRouter();
   const [step, setStep] = useState<"request" | "reset">("request");
   const [universityId, setUniversityId] = useState("");
-  const [challengeToken, setChallengeToken] = useState("");
   const { isSending, sendResetPIN } = useSendResetPIN();
   const { isResetting, resetPassword } = useResetPassword();
   const {
     IsEyeOpen: isNewPasswordEyeOpen,
     setIsEyeOpen: setIsNewPasswordEyeOpen,
   } = useShowPassword();
+  const {
+    register: registerRequest,
+    handleSubmit: handleRequestSubmit,
+    formState: { errors: requestErrors, isSubmitting: isRequestSubmitting },
+  } = useForm<ForgotPasswordRequestPayload>({
+    resolver: zodResolver(forgotPasswordRequestSchema),
+    defaultValues: {
+      universityId: "",
+    },
+  });
+  const {
+    register: registerReset,
+    handleSubmit: handleResetSubmit,
+    reset: resetResetForm,
+    formState: { errors: resetErrors, isSubmitting: isResetSubmitting },
+  } = useForm<ForgotPasswordResetPayload>({
+    resolver: zodResolver(forgotPasswordResetSchema),
+    defaultValues: {
+      challengeToken: "",
+      pin: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    },
+  });
+  const isRequestPending = isRequestSubmitting || isSending;
+  const isResetPending = isResetSubmitting || isResetting;
 
-  async function handleRequestSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const result = await sendResetPIN(universityId);
+  async function onRequestSubmit(data: ForgotPasswordRequestPayload) {
+    const result = await sendResetPIN(data.universityId);
 
     if (!result.success) {
       showErrorToast("Could not start password reset.");
       return;
     }
 
-    setChallengeToken(result.challengeToken);
+    setUniversityId(data.universityId);
+    resetResetForm({
+      challengeToken: result.challengeToken,
+      pin: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    });
     setStep("reset");
     showSuccessToast(result.message);
   }
 
-  async function handleResetSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-    const result = await resetPassword({
-      challengeToken,
-      pin: String(formData.get("pin") ?? ""),
-      newPassword: String(formData.get("newPassword") ?? ""),
-      confirmNewPassword: String(formData.get("confirmNewPassword") ?? ""),
-    });
+  async function onResetSubmit(data: ForgotPasswordResetPayload) {
+    const result = await resetPassword(data);
 
     if (!result.success) {
       showErrorToast(result.message);
@@ -85,7 +114,10 @@ export default function ForgotPasswordForm() {
       </div>
 
       {step === "request" ? (
-        <form onSubmit={handleRequestSubmit} className="mt-8 space-y-5">
+        <form
+          onSubmit={handleRequestSubmit(onRequestSubmit)}
+          className="mt-8 space-y-5"
+        >
           <div className="flex flex-col gap-2">
             <label htmlFor="universityId">University ID</label>
             <div className="relative">
@@ -96,27 +128,36 @@ export default function ForgotPasswordForm() {
               <Input
                 id="universityId"
                 type="text"
-                value={universityId}
-                onChange={(event) => setUniversityId(event.target.value)}
                 placeholder="Enter University ID"
                 className="pl-10"
-                required
+                {...registerRequest("universityId")}
+                disabled={isRequestPending}
               />
             </div>
+            {requestErrors.universityId ? (
+              <p className="text-sm text-red-600">
+                {requestErrors.universityId.message}
+              </p>
+            ) : null}
           </div>
 
           <Button
             variant="primary"
             buttonType="submit"
-            disabled={isSending}
+            disabled={isRequestPending}
             className="w-full"
           >
             <Send size={16} />
-            {isSending ? "Sending..." : "Send PIN"}
+            {isRequestPending ? "Sending..." : "Send PIN"}
           </Button>
         </form>
       ) : (
-        <form onSubmit={handleResetSubmit} className="mt-8 space-y-5">
+        <form
+          onSubmit={handleResetSubmit(onResetSubmit)}
+          className="mt-8 space-y-5"
+        >
+          <input type="hidden" {...registerReset("challengeToken")} />
+
           <div className="rounded-lg border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-900">
             A 6 digit PIN was sent to the email registered for{" "}
             <span className="font-semibold break-all">{universityId}</span>. It
@@ -127,14 +168,17 @@ export default function ForgotPasswordForm() {
             <label htmlFor="pin">Email PIN</label>
             <Input
               id="pin"
-              name="pin"
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
               placeholder="000000"
               maxLength={6}
-              required
+              {...registerReset("pin")}
+              disabled={isResetPending}
             />
+            {resetErrors.pin ? (
+              <p className="text-sm text-red-600">{resetErrors.pin.message}</p>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -146,12 +190,12 @@ export default function ForgotPasswordForm() {
               />
               <Input
                 id="newPassword"
-                name="newPassword"
                 type={isNewPasswordEyeOpen ? "text" : "password"}
                 autoComplete="new-password"
                 placeholder="Enter new password"
                 className="pr-10 pl-10"
-                required
+                {...registerReset("newPassword")}
+                disabled={isResetPending}
               />
               {isNewPasswordEyeOpen ? (
                 <Eye
@@ -167,6 +211,11 @@ export default function ForgotPasswordForm() {
                 />
               )}
             </div>
+            {resetErrors.newPassword ? (
+              <p className="text-sm text-red-600">
+                {resetErrors.newPassword.message}
+              </p>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -178,29 +227,44 @@ export default function ForgotPasswordForm() {
               />
               <Input
                 id="confirmNewPassword"
-                name="confirmNewPassword"
                 type="password"
                 autoComplete="new-password"
                 placeholder="Confirm new password"
                 className="pl-10"
-                required
+                {...registerReset("confirmNewPassword")}
+                disabled={isResetPending}
               />
             </div>
+            {resetErrors.confirmNewPassword ? (
+              <p className="text-sm text-red-600">
+                {resetErrors.confirmNewPassword.message}
+              </p>
+            ) : null}
           </div>
 
           <Button
             variant="primary"
             buttonType="submit"
-            disabled={isResetting}
+            disabled={isResetPending}
             className="w-full"
           >
-            {isResetting ? "Resetting..." : "Reset Password"}
+            {isResetPending ? "Resetting..." : "Reset Password"}
           </Button>
 
           <button
             type="button"
             className="w-full cursor-pointer text-sm font-medium text-slate-600 hover:text-sky-700 hover:underline"
-            onClick={() => setStep("request")}
+            disabled={isResetPending}
+            onClick={() => {
+              setStep("request");
+              setUniversityId("");
+              resetResetForm({
+                challengeToken: "",
+                pin: "",
+                newPassword: "",
+                confirmNewPassword: "",
+              });
+            }}
           >
             Use a different University ID
           </button>

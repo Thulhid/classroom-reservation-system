@@ -1,48 +1,56 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
+import { useUpdatePassword } from "@/features/profile/hooks/useUpdatePassword";
+import {
+  updatePasswordFormSchema,
+  type UpdatePasswordFormValues,
+} from "@/features/profile/validators/updatePasswordSchema";
 import { Button } from "@/features/shared/ui/button";
 import { Input } from "@/features/shared/ui/input";
 
 export default function UpdatePasswordForm() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isUpdating, updatePassword } = useUpdatePassword();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<UpdatePasswordFormValues>({
+    resolver: zodResolver(updatePasswordFormSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    },
+  });
+  const isMutating = isSubmitting || isUpdating;
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function onSubmit(data: UpdatePasswordFormValues) {
     setMessage("");
     setError("");
-    setIsSubmitting(true);
 
-    const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/profile/password", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        currentPassword: formData.get("currentPassword"),
-        newPassword: formData.get("newPassword"),
-        confirmNewPassword: formData.get("confirmNewPassword"),
-      }),
-    });
+    const result = await updatePassword(data);
 
-    const result = (await response.json()) as { message?: string };
-    setIsSubmitting(false);
-
-    if (!response.ok) {
+    if (!result.success) {
       setError(result.message ?? "Could not update password.");
       return;
     }
 
-    event.currentTarget.reset();
+    reset();
     setMessage(result.message ?? "Password updated successfully.");
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 w-full max-w-xl space-y-5">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="mt-8 w-full max-w-xl space-y-5"
+    >
       <h2 className="text-xl font-semibold text-slate-800">Update Password</h2>
 
       <div className="space-y-2">
@@ -51,11 +59,16 @@ export default function UpdatePasswordForm() {
         </label>
         <Input
           id="currentPassword"
-          name="currentPassword"
           type="password"
           autoComplete="current-password"
-          required
+          {...register("currentPassword")}
+          disabled={isMutating}
         />
+        {errors.currentPassword ? (
+          <p className="text-sm text-red-600">
+            {errors.currentPassword.message}
+          </p>
+        ) : null}
       </div>
 
       <div className="space-y-2">
@@ -64,11 +77,14 @@ export default function UpdatePasswordForm() {
         </label>
         <Input
           id="newPassword"
-          name="newPassword"
           type="password"
           autoComplete="new-password"
-          required
+          {...register("newPassword")}
+          disabled={isMutating}
         />
+        {errors.newPassword ? (
+          <p className="text-sm text-red-600">{errors.newPassword.message}</p>
+        ) : null}
       </div>
 
       <div className="space-y-2">
@@ -77,11 +93,16 @@ export default function UpdatePasswordForm() {
         </label>
         <Input
           id="confirmNewPassword"
-          name="confirmNewPassword"
           type="password"
           autoComplete="new-password"
-          required
+          {...register("confirmNewPassword")}
+          disabled={isMutating}
         />
+        {errors.confirmNewPassword ? (
+          <p className="text-sm text-red-600">
+            {errors.confirmNewPassword.message}
+          </p>
+        ) : null}
       </div>
 
       {error ? (
@@ -91,12 +112,8 @@ export default function UpdatePasswordForm() {
         <p className="text-sm font-medium text-emerald-600">{message}</p>
       ) : null}
 
-      <Button
-        buttonType="submit"
-        disabled={isSubmitting}
-        className="w-full sm:w-auto"
-      >
-        {isSubmitting ? "Updating..." : "Update Password"}
+      <Button buttonType="submit" disabled={isMutating} className="mt-5">
+        {isMutating ? "Updating..." : "Update Password"}
       </Button>
     </form>
   );

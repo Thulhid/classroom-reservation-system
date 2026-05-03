@@ -98,7 +98,7 @@ export default async function DashboardPage({
 
   return (
     <>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex items-center justify-between gap-4 lg:items-end">
         <div>
           <p className="text-sm font-medium text-sky-600">{roleLabel}</p>
           <h1 className="mt-1 text-2xl font-semibold text-slate-800 sm:text-4xl">
@@ -106,8 +106,8 @@ export default async function DashboardPage({
           </h1>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button link={roomsHref} className="w-full gap-2 px-5 sm:w-auto">
+        <div className="flex gap-3">
+          <Button link={roomsHref} className="gap-2 px-5">
             Rooms
             <ArrowRight size={16} />
           </Button>

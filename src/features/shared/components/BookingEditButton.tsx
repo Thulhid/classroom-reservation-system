@@ -1,6 +1,8 @@
 "use client";
 
-import { FormEvent, useId, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useId, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import {
   CalendarDays,
@@ -11,6 +13,10 @@ import {
 } from "lucide-react";
 
 import { useUpdateBooking } from "@/features/bookings/hooks/useUpdateBooking";
+import {
+  updateBookingFormSchema,
+  type UpdateBookingFormValues,
+} from "@/features/bookings/validators/createBookingSchema";
 import {
   showErrorToast,
   showSuccessToast,
@@ -54,20 +60,34 @@ export default function BookingEditButton({
   const formId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const { isUpdating, updateBooking } = useUpdateBooking();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<UpdateBookingFormValues>({
+    resolver: zodResolver(updateBookingFormSchema),
+    defaultValues: {
+      purpose: initialPurpose ?? "",
+      date: initialDate,
+      startTime: initialStartTime,
+      endTime: initialEndTime,
+    },
+  });
+  const isMutating = isSubmitting || isUpdating;
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function resetForm() {
+    reset({
+      purpose: initialPurpose ?? "",
+      date: initialDate,
+      startTime: initialStartTime,
+      endTime: initialEndTime,
+    });
+  }
 
-    const formData = new FormData(event.currentTarget);
-    const payload = {
-      purpose: String(formData.get("purpose") ?? ""),
-      date: String(formData.get("date") ?? ""),
-      startTime: String(formData.get("startTime") ?? ""),
-      endTime: String(formData.get("endTime") ?? ""),
-    };
-
+  async function onSubmit(data: UpdateBookingFormValues) {
     try {
-      const result = await updateBooking(bookingId, payload);
+      const result = await updateBooking(bookingId, data);
 
       if (!result.success) {
         showErrorToast(result.message ?? "Could not update booking.");
@@ -87,7 +107,11 @@ export default function BookingEditButton({
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        if (!isUpdating) {
+        if (!isMutating) {
+          if (open) {
+            resetForm();
+          }
+
           setIsOpen(open);
         }
       }}
@@ -116,7 +140,7 @@ export default function BookingEditButton({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2 sm:col-span-3">
               <label
@@ -128,13 +152,16 @@ export default function BookingEditButton({
               </label>
               <Textarea
                 id={`${formId}-purpose`}
-                name="purpose"
-                defaultValue={initialPurpose ?? ""}
                 maxLength={120}
                 placeholder="Lecture, lab, tutorial..."
-                disabled={isUpdating}
-                required
+                {...register("purpose")}
+                disabled={isMutating}
               />
+              {errors.purpose ? (
+                <p className="text-sm text-red-600">
+                  {errors.purpose.message}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -147,12 +174,13 @@ export default function BookingEditButton({
               </label>
               <Input
                 id={`${formId}-date`}
-                name="date"
                 type="date"
-                defaultValue={initialDate}
-                disabled={isUpdating}
-                required
+                {...register("date")}
+                disabled={isMutating}
               />
+              {errors.date ? (
+                <p className="text-sm text-red-600">{errors.date.message}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -165,12 +193,15 @@ export default function BookingEditButton({
               </label>
               <Input
                 id={`${formId}-start-time`}
-                name="startTime"
                 type="time"
-                defaultValue={initialStartTime}
-                disabled={isUpdating}
-                required
+                {...register("startTime")}
+                disabled={isMutating}
               />
+              {errors.startTime ? (
+                <p className="text-sm text-red-600">
+                  {errors.startTime.message}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -183,12 +214,15 @@ export default function BookingEditButton({
               </label>
               <Input
                 id={`${formId}-end-time`}
-                name="endTime"
                 type="time"
-                defaultValue={initialEndTime}
-                disabled={isUpdating}
-                required
+                {...register("endTime")}
+                disabled={isMutating}
               />
+              {errors.endTime ? (
+                <p className="text-sm text-red-600">
+                  {errors.endTime.message}
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -196,16 +230,16 @@ export default function BookingEditButton({
             <DialogClose
               type="button"
               className="inline-flex h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-50"
-              disabled={isUpdating}
+              disabled={isMutating}
             >
               Cancel
             </DialogClose>
             <button
               type="submit"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-sky-600 px-4 text-sm font-medium text-white transition-colors hover:bg-sky-700 disabled:pointer-events-none disabled:opacity-50"
-              disabled={isUpdating}
+              disabled={isMutating}
             >
-              {isUpdating ? (
+              {isMutating ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
                   Saving...

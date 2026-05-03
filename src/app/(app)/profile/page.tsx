@@ -35,7 +35,7 @@ export default async function ProfilePage() {
 
   return (
     <>
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex w-full items-center justify-between gap-6 sm:items-center">
         <div>
           <p className="text-sm font-medium text-sky-600">Account Settings</p>
           <h1 className="mt-1 text-2xl font-semibold text-slate-800 sm:text-4xl">
@@ -44,17 +44,12 @@ export default async function ProfilePage() {
         </div>
 
         <form
-          className="w-full sm:w-auto"
           action={async () => {
             "use server";
             await signOut({ redirectTo: "/login" });
           }}
         >
-          <Button
-            buttonType="submit"
-            variant={"danger"}
-            className="w-full sm:w-auto"
-          >
+          <Button buttonType="submit" variant={"danger"}>
             <LogOut size={16} />
             Sign Out
           </Button>

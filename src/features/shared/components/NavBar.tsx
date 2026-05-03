@@ -19,8 +19,12 @@ export default function Navbar({ user, isAdmin }: NavbarProps) {
 
   function linkClass(path: string) {
     const isActive = pathname === path || pathname.startsWith(`${path}/`);
+    const baseClassName =
+      "border-b-2 pb-1 text-sm font-medium transition-colors";
 
-    return isActive ? "text-sky-500" : "text-slate-600 hover:text-sky-500";
+    return isActive
+      ? `${baseClassName} border-sky-500 text-sky-600`
+      : `${baseClassName} border-transparent text-slate-600 hover:border-sky-200 hover:text-sky-500`;
   }
 
   return (
@@ -34,28 +38,19 @@ export default function Navbar({ user, isAdmin }: NavbarProps) {
         </Link>
 
         <div className="order-last -mx-1 flex w-full items-center gap-3 overflow-x-auto px-1 pb-1 text-nowrap md:order-none md:mx-0 md:w-auto md:gap-6 md:overflow-visible md:px-0 md:pb-0">
-          <Link
-            href="/dashboard"
-            className={`text-sm ${linkClass("/dashboard")}`}
-          >
+          <Link href="/dashboard" className={linkClass("/dashboard")}>
             Dashboard
           </Link>
-          <Link href={roomsHref} className={`text-sm ${linkClass(roomsHref)}`}>
+          <Link href={roomsHref} className={linkClass(roomsHref)}>
             Rooms
           </Link>
           {isAdmin ? (
-            <Link
-              href={usersHref}
-              className={`text-sm ${linkClass(usersHref)}`}
-            >
+            <Link href={usersHref} className={linkClass(usersHref)}>
               Users
             </Link>
           ) : null}
           {user.role === "TEACHER" && (
-            <Link
-              href="/bookings"
-              className={`text-sm ${linkClass("/bookings")}`}
-            >
+            <Link href="/bookings" className={linkClass("/bookings")}>
               My Bookings
             </Link>
           )}
