@@ -45,6 +45,9 @@ export default function RoomCard({ room }: RoomCardProps) {
               <h2 className="mt-2 text-lg font-semibold text-slate-800 sm:text-xl">
                 {room.name}
               </h2>
+              <p className="text-sm text-slate-600">
+                Room number: {room.number}
+              </p>
             </div>
 
             <Badge

@@ -8,6 +8,8 @@ import RoomCardBox from "@/features/rooms/components/RoomCardBox";
 import Badge from "@/features/shared/components/Badge";
 import { Suspense } from "react";
 import Spinner from "@/features/shared/components/Spinner";
+import RoomSearchBar from "@/features/rooms/components/RoomSearchBar";
+import { getSearchParamValue } from "@/features/rooms/lib/getSearchParamValue";
 
 type RoomsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -22,9 +24,21 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
 
   const resolvedSearchParams = await searchParams;
   const { period, error } = resolveAvailabilityPeriod(resolvedSearchParams);
+
+  const roomSearchQuery = getSearchParamValue(resolvedSearchParams.q).trim();
+
   const rooms = await getClassroomAvailability(period);
-  const availableRooms = rooms.filter((room) => !room.booking).length;
-  const bookedRooms = rooms.length - availableRooms;
+
+  const filteredRooms = roomSearchQuery
+    ? rooms.filter((room) => {
+        const searchText = `${room.number} ${room.name}`.toLowerCase();
+
+        return searchText.includes(roomSearchQuery.toLowerCase());
+      })
+    : rooms;
+
+  const availableRooms = filteredRooms.filter((room) => !room.booking).length;
+  const bookedRooms = filteredRooms.length - availableRooms;
 
   return (
     <>
@@ -39,15 +53,22 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
           </Badge>
           <Badge styles={"bg-red-500 text-red-50"}>Booked {bookedRooms}</Badge>
           <Badge styles={"bg-slate-500 text-slate-50"}>
-            Total {rooms.length}
+            Total {filteredRooms.length}
           </Badge>
         </div>
       </div>
 
       <AvailabilitySearchForm period={period} error={error} />
 
+      <RoomSearchBar
+        period={period}
+        searchQuery={roomSearchQuery}
+        resultCount={filteredRooms.length}
+        totalCount={rooms.length}
+      />
+
       <Suspense fallback={<Spinner className="mx-auto mt-15" size={50} />}>
-        <RoomCardBox rooms={rooms} />
+        <RoomCardBox rooms={filteredRooms} />
       </Suspense>
     </>
   );
