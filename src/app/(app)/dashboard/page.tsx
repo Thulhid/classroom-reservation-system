@@ -20,6 +20,7 @@ import Spinner from "@/features/shared/components/Spinner";
 import Stats from "@/features/dashboard/components/Stats";
 import TeachersNextWindowBox from "@/features/dashboard/components/TeachersNextWindowBox";
 import RoomAvailabilityMatrix from "@/features/dashboard/components/RoomAvailabilityMatrix";
+import AdminDashboardCharts from "@/features/dashboard/components/AdminDashboardCharts";
 
 type DashboardPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -141,6 +142,8 @@ export default async function DashboardPage({
             period={period}
           />
         ) : null}
+
+        {session.user.role === "ADMIN" ? <AdminDashboardCharts /> : null}
 
         {session.user.role !== "ADMIN" ? (
           <RoomAvailabilityMatrix

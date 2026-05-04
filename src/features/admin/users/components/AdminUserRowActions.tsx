@@ -36,7 +36,7 @@ type AdminUserRowActionsProps = {
 
 function getDeleteDescription(user: AdminManagedUser) {
   if (user.role === "TEACHER") {
-    return "Teacher accounts with booking history cannot be deleted. Clear or archive reservations first, then remove the account from this panel.";
+    return "This teacher account and all bookings linked to this teacher will be permanently removed from the system.";
   }
 
   return "This student account will be permanently removed from the system. Passwords are not edited here, but the account itself will no longer be able to sign in.";

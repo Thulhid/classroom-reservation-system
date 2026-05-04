@@ -170,7 +170,9 @@ export default function AdminCreateUserDialog({
               </label>
               <Input
                 id={`${fieldIdPrefix}UniID`}
-                placeholder="TCH001"
+                placeholder={
+                  role === "STUDENT" ? "TGUSTU202601" : "TGUTCH202601"
+                }
                 {...register("uniID")}
                 disabled={isSubmitting}
                 required

@@ -428,19 +428,6 @@ export async function deleteAdminUser(userId: string) {
       );
     }
 
-    const bookingCount = await prisma.booking.count({
-      where: {
-        teacherId: teacher.id,
-      },
-    });
-
-    if (bookingCount > 0) {
-      throw new AdminUserServiceError(
-        "Teachers with booking history cannot be deleted. Clear or archive their reservations first.",
-        409,
-      );
-    }
-
     await prisma.$transaction(async (tx) => {
       await tx.teacher.delete({
         where: {

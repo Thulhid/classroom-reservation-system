@@ -2,6 +2,9 @@ import { z } from "zod";
 
 import { MANAGED_USER_ROLES } from "@/features/admin/users/types/AdminTypes";
 
+const STUDENT_UNI_ID_REGEX = /^TGUSTU\d{6}$/;
+const TEACHER_UNI_ID_REGEX = /^TGUTCH\d{6}$/;
+
 const adminUserBaseSchema = z.object({
   firstName: z
     .string()
@@ -16,8 +19,13 @@ const adminUserBaseSchema = z.object({
   uniID: z
     .string()
     .trim()
-    .min(3, "University ID is required.")
-    .max(30, "University ID is too long."),
+    .transform((value) => value.toUpperCase())
+    .pipe(
+      z
+        .string()
+        .min(1, "University ID is required.")
+        .max(30, "University ID is too long."),
+    ),
   email: z
     .string()
     .trim()
@@ -37,7 +45,23 @@ export const adminCreateUserFormSchema = adminUserBaseSchema
       .max(72, "Password is too long."),
     confirmPassword: z.string().min(1, "Please confirm the password."),
   })
-  .superRefine(({ password, confirmPassword }, context) => {
+  .superRefine(({ role, uniID, password, confirmPassword }, context) => {
+    if (role === "STUDENT" && !STUDENT_UNI_ID_REGEX.test(uniID)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["uniID"],
+        message: "Student ID must follow this format: TGUSTU202601.",
+      });
+    }
+
+    if (role === "TEACHER" && !TEACHER_UNI_ID_REGEX.test(uniID)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["uniID"],
+        message: "Teacher ID must follow this format: TGUTCH202601.",
+      });
+    }
+
     if (password !== confirmPassword) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
@@ -46,7 +70,6 @@ export const adminCreateUserFormSchema = adminUserBaseSchema
       });
     }
   });
-
 export type AdminUserFormValues = z.infer<typeof adminUserFormSchema>;
 export type AdminUserPayload = z.output<typeof adminUserFormSchema>;
 export type AdminCreateUserFormValues = z.infer<
