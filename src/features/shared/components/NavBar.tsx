@@ -28,7 +28,7 @@ export default function Navbar({ user, isAdmin }: NavbarProps) {
   }
 
   return (
-    <header className="border-b bg-white">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
       <nav className="mx-auto flex w-full max-w-[1440px] flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-2">
           <GraduationCap className="shrink-0 text-sky-500" />
