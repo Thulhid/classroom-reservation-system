@@ -1,4 +1,4 @@
-import { addMinutes, format, isFuture } from "date-fns";
+import { addMinutes, isFuture } from "date-fns";
 
 import { prisma } from "@/lib/prisma";
 import {
@@ -6,6 +6,7 @@ import {
   type BookingPeriodInput,
   parseBookingPeriod,
   parseLocalDateTime,
+  formatBookingTime,
   toDateInputValue,
   toTimeInputValue,
 } from "@/features/bookings/lib/dateTime";
@@ -146,7 +147,11 @@ function getOverlapWhere(period: Pick<BookingPeriod, "startsAt" | "endsAt">) {
 }
 
 function getSlotLabel(startsAt: Date, slotMinutes: number) {
-  return format(startsAt, slotMinutes < 60 ? "h:mm a" : "h a");
+  const startsOnHour = toTimeInputValue(startsAt).endsWith(":00");
+
+  return formatBookingTime(startsAt, {
+    includeMinutes: slotMinutes < 60 || !startsOnHour,
+  });
 }
 
 function clampMatrixBlockCount(blockCount?: number) {

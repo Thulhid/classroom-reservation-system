@@ -1,11 +1,7 @@
 import {
   addHours,
   areIntervalsOverlapping,
-  format,
   isAfter,
-  isValid,
-  parse,
-  startOfHour,
 } from "date-fns";
 
 export type BookingPeriodInput = {
@@ -23,17 +19,155 @@ export type BookingPeriod = {
 };
 
 type SearchParamValue = string | string[] | undefined;
+type ZonedDateTimeParts = {
+  day: number;
+  hour: number;
+  minute: number;
+  month: number;
+  second: number;
+  year: number;
+};
 
-const dateInputFormat = "yyyy-MM-dd";
-const timeInputFormat = "HH:mm";
-const localDateTimeFormat = `${dateInputFormat} ${timeInputFormat}`;
+const fallbackBookingTimeZone = "Asia/Colombo";
+const configuredBookingTimeZone =
+  process.env.NEXT_PUBLIC_BOOKING_TIME_ZONE?.trim();
+const dateInputPattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+const timeInputPattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+function resolveBookingTimeZone() {
+  const timeZone = configuredBookingTimeZone || fallbackBookingTimeZone;
+
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone }).format(new Date());
+    return timeZone;
+  } catch {
+    return fallbackBookingTimeZone;
+  }
+}
+
+export const bookingTimeZone = resolveBookingTimeZone();
+
+const zonedDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  hour: "2-digit",
+  hourCycle: "h23",
+  minute: "2-digit",
+  month: "2-digit",
+  second: "2-digit",
+  timeZone: bookingTimeZone,
+  year: "numeric",
+});
+
+const bookingDateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "short",
+  timeZone: bookingTimeZone,
+  weekday: "short",
+  year: "numeric",
+});
+
+const bookingTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: bookingTimeZone,
+});
+
+const bookingHourFormatter = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  timeZone: bookingTimeZone,
+});
+
+function padDatePart(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function getFormatterPart(
+  parts: Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes,
+) {
+  return parts.find((part) => part.type === type)?.value ?? "";
+}
+
+function getZonedDateTimeParts(date: Date): ZonedDateTimeParts {
+  const parts = zonedDateTimeFormatter.formatToParts(date);
+
+  return {
+    day: Number(getFormatterPart(parts, "day")),
+    hour: Number(getFormatterPart(parts, "hour")) % 24,
+    minute: Number(getFormatterPart(parts, "minute")),
+    month: Number(getFormatterPart(parts, "month")),
+    second: Number(getFormatterPart(parts, "second")),
+    year: Number(getFormatterPart(parts, "year")),
+  };
+}
+
+function formatDateInputParts({ day, month, year }: ZonedDateTimeParts) {
+  return `${year}-${padDatePart(month)}-${padDatePart(day)}`;
+}
+
+function formatTimeInputParts({ hour, minute }: ZonedDateTimeParts) {
+  return `${padDatePart(hour)}:${padDatePart(minute)}`;
+}
+
+function getTimeZoneOffsetMs(date: Date) {
+  const parts = getZonedDateTimeParts(date);
+  const zonedTimestamp = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second,
+  );
+
+  return zonedTimestamp - date.getTime();
+}
+
+function parseDateParts(date: string) {
+  const match = dateInputPattern.exec(date);
+
+  if (!match) {
+    return null;
+  }
+
+  const [, yearValue, monthValue, dayValue] = match;
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  const day = Number(dayValue);
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    utcDate.getUTCFullYear() !== year ||
+    utcDate.getUTCMonth() !== month - 1 ||
+    utcDate.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return { day, month, year };
+}
+
+function parseTimeParts(time: string) {
+  const match = timeInputPattern.exec(time);
+
+  if (!match) {
+    return null;
+  }
+
+  const [, hourValue, minuteValue] = match;
+
+  return {
+    hour: Number(hourValue),
+    minute: Number(minuteValue),
+  };
+}
 
 export function toDateInputValue(date: Date) {
-  return format(date, dateInputFormat);
+  return formatDateInputParts(getZonedDateTimeParts(date));
 }
 
 export function toTimeInputValue(date: Date) {
-  return format(date, timeInputFormat);
+  return formatTimeInputParts(getZonedDateTimeParts(date));
 }
 
 function getFirstValue(value: SearchParamValue) {
@@ -41,7 +175,12 @@ function getFirstValue(value: SearchParamValue) {
 }
 
 export function getDefaultBookingPeriod(now = new Date()): BookingPeriod {
-  const currentHour = startOfHour(now);
+  const nowParts = getZonedDateTimeParts(now);
+  const currentHour =
+    parseLocalDateTime(
+      formatDateInputParts(nowParts),
+      `${padDatePart(nowParts.hour)}:00`,
+    ) ?? now;
   const startsAt = isAfter(now, currentHour)
     ? addHours(currentHour, 1)
     : currentHour;
@@ -57,20 +196,36 @@ export function getDefaultBookingPeriod(now = new Date()): BookingPeriod {
 }
 
 export function parseLocalDateTime(date: string, time: string) {
-  const parsedDate = parse(
-    `${date} ${time}`,
-    localDateTimeFormat,
-    new Date(),
-  );
+  const dateParts = parseDateParts(date);
+  const timeParts = parseTimeParts(time);
 
-  if (!isValid(parsedDate)) {
+  if (!dateParts || !timeParts) {
     return null;
   }
 
-  return toDateInputValue(parsedDate) === date &&
-    toTimeInputValue(parsedDate) === time
-    ? parsedDate
-    : null;
+  const wallClockTimestamp = Date.UTC(
+    dateParts.year,
+    dateParts.month - 1,
+    dateParts.day,
+    timeParts.hour,
+    timeParts.minute,
+  );
+  const firstPassOffset = getTimeZoneOffsetMs(new Date(wallClockTimestamp));
+  let parsedDate = new Date(wallClockTimestamp - firstPassOffset);
+  const secondPassOffset = getTimeZoneOffsetMs(parsedDate);
+
+  if (secondPassOffset !== firstPassOffset) {
+    parsedDate = new Date(wallClockTimestamp - secondPassOffset);
+  }
+
+  if (
+    toDateInputValue(parsedDate) !== date ||
+    toTimeInputValue(parsedDate) !== time
+  ) {
+    return null;
+  }
+
+  return parsedDate;
 }
 
 export function parseBookingPeriod(input: BookingPeriodInput) {
@@ -148,9 +303,18 @@ export function isOverlappingPeriod(
 }
 
 export function formatBookingDate(date: Date) {
-  return format(date, "EEE, MMM d, yyyy");
+  return bookingDateFormatter.format(date);
+}
+
+export function formatBookingTime(
+  date: Date,
+  { includeMinutes = true } = {},
+) {
+  return (includeMinutes ? bookingTimeFormatter : bookingHourFormatter).format(
+    date,
+  );
 }
 
 export function formatBookingTimeRange(startsAt: Date, endsAt: Date) {
-  return `${format(startsAt, "h:mm a")} - ${format(endsAt, "h:mm a")}`;
+  return `${formatBookingTime(startsAt)} - ${formatBookingTime(endsAt)}`;
 }
